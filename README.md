@@ -1,7 +1,6 @@
 # muse-player
 
-![Muse-Application](https://github.com/user-attachments/assets/53d03074-4287-4d74-8746-47a135e18f18)
-
+<center><img src="https://github.com/user-attachments/assets/53d03074-4287-4d74-8746-47a135e18f18" width="300" height="300"></center>
 
 This application is an example of a previously improved YouTube-ts-lib project.
 
