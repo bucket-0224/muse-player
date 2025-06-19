@@ -9,7 +9,7 @@ By default, the application utilizes the yt-dl-exec library, which fetches YouTu
 
 The code of the application will be maintained and changed continuously, and we are currently using MVVM + Clean Architecture (NIA).
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)]([https://www.buymeacoffee.com/gbraad](https://coff.ee/ydh878787))
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://coff.ee/ydh878787)
 
 
 
