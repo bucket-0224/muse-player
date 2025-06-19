@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Muse</string>
+    <string name="title_activity_album">AlbumActivity</string>
+    <string name="title_activity_search_artist">SearchArtistActivity</string>
+</resources>

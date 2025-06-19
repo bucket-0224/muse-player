@@ -1,0 +1,11 @@
+package kr.co.donghyun.player.data.extractor.repository
+
+import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
+import okhttp3.MultipartBody
+import retrofit2.Response
+
+interface ExtractorRepository {
+    suspend fun getExtractorUrl(cookie : MultipartBody.Part, videoId : String) : Response<ExtractorResponseBody>
+    suspend fun insertExtractorResponse(extractorResponseBody: ExtractorResponseBody)
+    suspend fun fetchExtractorResponses() : List<ExtractorResponseBody>
+}
