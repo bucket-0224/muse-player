@@ -54,7 +54,7 @@ import kr.co.donghyun.player.presentation.util.calculateLuminanceFromBitmap
 import kr.co.donghyun.player.presentation.viewmodel.AlbumViewModel
 
 @Composable
-fun AlbumDetailScreen(viewModel: AlbumViewModel, onClick : (Music) -> Unit, onPlaylistInsertClick : (Music) -> Unit) {
+fun AlbumDetailScreen(viewModel: AlbumViewModel, onClick : (Music, Int) -> Unit) {
     with(viewModel) {
         val album = remember { albumDetail }
         val isPlayingSong = remember { playbackManager.playingStateOfResponse }
@@ -89,7 +89,7 @@ fun AlbumDetailScreen(viewModel: AlbumViewModel, onClick : (Music) -> Unit, onPl
 
                     items(album.value?.musics ?: listOf()) { song ->
                         AlbumDetailComponents(albumSong = song, album.value?.artist, onClick = {
-                            onClick(song)
+                            onClick(song, (album.value?.musics ?: listOf()).indexOf(song))
                         })
                     }
 

@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kr.co.donghyun.player.data.album.model.VideoItem
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,6 +27,9 @@ class PlaybackManager @Inject constructor() {
     val currentMusicSeekBarPosition = mutableFloatStateOf(0F)
     val currentMusicPosition = mutableLongStateOf(0L)
     val musicDuration = mutableLongStateOf(0L)
+    private val _fetchedVideoMusicList = MutableStateFlow(mutableListOf<Any>())
+    val fetchedVideoMusicList = _fetchedVideoMusicList.asStateFlow()
+    val currentPlayingVideoMusicIndex = mutableIntStateOf(0)
 
     fun resetPlaybackState() {
         currentMusicSeekBarPosition.floatValue = 0f
@@ -45,6 +49,17 @@ class PlaybackManager @Inject constructor() {
             clear()
             addAll(list)
         }
+    }
+
+    fun getFetchedMusicVideoList() = fetchedVideoMusicList.value
+
+
+    fun setUpFetchedMusicVideoList(list : List<Any?>, currentIndex : Int) {
+        _fetchedVideoMusicList.value.run {
+            clear()
+            addAll(list.requireNoNulls())
+        }
+        currentPlayingVideoMusicIndex.intValue = currentIndex
     }
 
     fun setVideo(videoId: String, url: String) {

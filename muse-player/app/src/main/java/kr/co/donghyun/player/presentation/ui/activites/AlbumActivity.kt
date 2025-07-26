@@ -56,17 +56,21 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
     @Composable
     override fun OnViewCreated() {
         val isClickable = remember { mutableStateOf(true) }
+        val currentAlbum = remember { viewModel.albumDetail }
 
         AlbumDetailScreen(viewModel = viewModel.apply {
             getAlbumDetail(albumId = intent.getStringExtra("albumId") ?: "", channelId = intent.getStringExtra("channelId") ?: "")
-        }, onClick = { song ->
+        }, onClick = { song, index ->
             with(viewModel) {
                 with(playbackManager) {
                     if(isClickable.value) {
                         isClickable.value = false
                         onLoadMediaItem(song.youtubeId, Util.SEARCH.ARTIST.name) {
                             startActivity(Intent(this@AlbumActivity, PlayerActivity::class.java).apply {
-                                playbackManager.isOnPlaylist.value = false
+                                playbackManager.run {
+                                    isOnPlaylist.value = false
+                                    setUpFetchedMusicVideoList(currentAlbum.value?.musics ?: listOf(), index)
+                                }
                                 putExtra("isAnotherMusic", song.youtubeId != if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.youtubeId else (playingStateOfResponse.value as VideoItem?)?.id)
                                 putExtra("videoId", song.youtubeId)
                             })
@@ -75,10 +79,6 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
                         }
                     }
                 }
-            }
-        }, onPlaylistInsertClick = {
-            viewModel.insertToPlaylist(it) {
-                Toast.makeText(this@AlbumActivity, "플레이리스트에 해당 앨범이 추가되었습니다.", Toast.LENGTH_LONG).show()
             }
         })
     }
@@ -117,13 +117,14 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
                             }
                             ContextCompat.startForegroundService(this@AlbumActivity, intent)
 
+                            playbackManager.setVideo(videoId, videoUrl)
+
                             exoPlayer.run {
                                 playWhenReady = true
 
                                 addListener(object : Player.Listener {
                                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                                         isPlayingState.value = isPlaying
-                                        playbackManager.setVideo(videoId, videoUrl)
 
                                         CoroutineScope(Dispatchers.Main).launch {
                                             while (isPlaying) {

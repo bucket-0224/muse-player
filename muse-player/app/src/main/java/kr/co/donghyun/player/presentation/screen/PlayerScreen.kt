@@ -132,10 +132,7 @@ fun PlayerScreen(
                                             val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
                                             // Create Muse directory if not exists
-                                            val museFolder = File(
-                                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                                "Muse"
-                                            )
+                                            val museFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath)
 
                                             if (!museFolder.exists()) {
                                                 museFolder.mkdirs()
@@ -143,10 +140,10 @@ fun PlayerScreen(
 
                                             val uri = videoUrl.toUri()
                                             val request = DownloadManager.Request(uri).apply {
-                                                setTitle("영상 다운로드")
-                                                setDescription("영상을 다운로드 중입니다..")
+                                                setTitle("음악 다운로드")
+                                                setDescription("음악을 다운로드 중입니다..")
                                                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                                                setDestinationUri(Uri.fromFile(File(museFolder, "${SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())}.mp4")))
+                                                setDestinationUri(Uri.fromFile(File(museFolder, "${if(data is Music?) data?.title else if(data is VideoItem?) data.title else "${SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())}"}.mp3")))
                                                 setAllowedOverMetered(true)
                                             }
 
@@ -186,7 +183,7 @@ fun PlayerScreen(
                         }
                     }, currentMusicPosition, currentMusicSeekBarPosition, musicDuration)
                     Spacer(modifier = Modifier.weight(0.5f))
-                    ControllerComponents(isOnPlaylist = isOnPlaylist, playerState = isPlayingState.value, onStateChangedCallback = {
+                    ControllerComponents(playerState = isPlayingState.value, onStateChangedCallback = {
                         isPlayingState.value = it
                         playingStateCallback(it)
                     }, onPreviousMusic = onPreviousMusic, onNextMusic = onNextMusic)

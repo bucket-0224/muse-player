@@ -277,6 +277,8 @@ fun SearchScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, play
                                                         putExtra("isAnotherMusic", video?.id != if(playingStateOfResponse.value is VideoItem?) (playingStateOfResponse.value as VideoItem?)?.id else (playingStateOfResponse.value as Music?)?.youtubeId)
                                                         putExtra("playingType", Util.SEARCH.VIDEO.name)
 
+                                                        playbackManager.setUpFetchedMusicVideoList(searchedVideos.toList(), searchedVideos.indexOf(video))
+
                                                         showBottomSheet = false
                                                         isClickable.value = true
                                                         isOnPlaylist.value = false

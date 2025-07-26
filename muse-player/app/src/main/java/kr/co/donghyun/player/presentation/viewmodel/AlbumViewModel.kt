@@ -59,18 +59,6 @@ class AlbumViewModel @Inject constructor(
         }
     }
 
-    fun insertToPlaylist(music : Music, onInsertedCallback : () -> Unit) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                albumUseCase.insertMusic(music.copy(
-                    insertedAt = Date()
-                ))
-            }
-
-            onInsertedCallback()
-        }
-    }
-
     fun getYoutubeUrlById(cookie : File, videoId : String, onPreparedExoPlayer : (String) -> Unit, onError : () -> Unit) {
         if(loadMediaCoroutineJob?.isActive == true) {
             loadMediaCoroutineJob?.cancel()

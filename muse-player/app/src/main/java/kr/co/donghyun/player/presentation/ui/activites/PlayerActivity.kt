@@ -68,6 +68,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                 musicDuration = musicDuration,
                 isPlayingState = isPlayingState,
                 data = rememberGetMusicDetail.value,
+                isOnPlaylist = isOnPlaylist.value,
                 playingStateCallback = {
                     if(it) {
                         exoPlayer.play()
@@ -75,55 +76,104 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         exoPlayer.pause()
                     }
                 },
-                isOnPlaylist = isOnPlaylist.value,
                 viewModel = this,
                 onNextMusic = {
-                    val nextIndex = if (playbackManager.currentMusicIndex.intValue >= playbackManager.getFetchedPlaylist().lastIndex) {
-                        0
-                    } else {
-                        playbackManager.currentMusicIndex.intValue + 1
-                    }
-
-                    playbackManager.currentMusicIndex.intValue = nextIndex
-
-                    val videoId = when (val item = playbackManager.getFetchedPlaylist()[nextIndex]) {
-                        is Music -> item.youtubeId
-                        is VideoItem -> item.id
-                        else -> ""
-                    }
-
-                    playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[nextIndex]
-
-                    onLoadMediaItem(
-                        videoId,
-                        onSuccessCallback = { videoId, videoUrl ->
-                            playbackManager.setVideo(videoId, videoUrl)
+                    if(isOnPlaylist.value) {
+                        val nextIndex = if (playbackManager.currentMusicIndex.intValue >= playbackManager.getFetchedPlaylist().lastIndex) {
+                            0
+                        } else {
+                            playbackManager.currentMusicIndex.intValue + 1
                         }
-                    )
+
+                        playbackManager.currentMusicIndex.intValue = nextIndex
+
+                        val videoId = when (val item = playbackManager.getFetchedPlaylist()[nextIndex]) {
+                            is Music -> item.youtubeId
+                            is VideoItem -> item.id
+                            else -> ""
+                        }
+
+                        playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[nextIndex]
+
+                        onLoadMediaItem(
+                            videoId,
+                            onSuccessCallback = { videoId, videoUrl ->
+                                playbackManager.setVideo(videoId, videoUrl)
+                            }
+                        )
+                    } else {
+                        val nextIndex = if (playbackManager.currentPlayingVideoMusicIndex.intValue >= playbackManager.getFetchedMusicVideoList().lastIndex) {
+                            0
+                        } else {
+                            playbackManager.currentPlayingVideoMusicIndex.intValue + 1
+                        }
+
+                        playbackManager.currentPlayingVideoMusicIndex.intValue = nextIndex
+
+                        val videoId = when (val item = playbackManager.getFetchedMusicVideoList()[nextIndex]) {
+                            is Music -> item.youtubeId
+                            is VideoItem -> item.id
+                            else -> ""
+                        }
+
+                        playbackManager.playingStateOfResponse.value = playbackManager.getFetchedMusicVideoList()[nextIndex]
+
+                        onLoadMediaItem(
+                            videoId,
+                            onSuccessCallback = { videoId, videoUrl ->
+                                playbackManager.setVideo(videoId, videoUrl)
+                            }
+                        )
+                    }
                 },
                 onPreviousMusic = {
-                    val previousIndex = if (playbackManager.currentMusicIndex.intValue <= 0) {
-                        playbackManager.getFetchedPlaylist().lastIndex
-                    } else {
-                        playbackManager.currentMusicIndex.intValue - 1
-                    }
-
-                    playbackManager.currentMusicIndex.intValue = previousIndex
-
-                    val videoId = when (val item = playbackManager.getFetchedPlaylist()[previousIndex]) {
-                        is Music -> item.youtubeId
-                        is VideoItem -> item.id
-                        else -> ""
-                    }
-
-                    playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[previousIndex]
-
-                    onLoadMediaItem(
-                        videoId,
-                        onSuccessCallback = { videoId, videoUrl ->
-                            playbackManager.setVideo(videoId, videoUrl)
+                    if(isOnPlaylist.value) {
+                        val previousIndex = if (playbackManager.currentMusicIndex.intValue <= 0) {
+                            playbackManager.getFetchedPlaylist().lastIndex
+                        } else {
+                            playbackManager.currentMusicIndex.intValue - 1
                         }
-                    )
+
+                        playbackManager.currentMusicIndex.intValue = previousIndex
+
+                        val videoId = when (val item = playbackManager.getFetchedPlaylist()[previousIndex]) {
+                            is Music -> item.youtubeId
+                            is VideoItem -> item.id
+                            else -> ""
+                        }
+
+                        playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[previousIndex]
+
+                        onLoadMediaItem(
+                            videoId,
+                            onSuccessCallback = { videoId, videoUrl ->
+                                playbackManager.setVideo(videoId, videoUrl)
+                            }
+                        )
+                    } else {
+                        val previousIndex = if (playbackManager.currentPlayingVideoMusicIndex.intValue <= 0) {
+                            playbackManager.getFetchedMusicVideoList().lastIndex
+                        } else {
+                            playbackManager.currentPlayingVideoMusicIndex.intValue - 1
+                        }
+
+                        playbackManager.currentPlayingVideoMusicIndex.intValue = previousIndex
+
+                        val videoId = when (val item = playbackManager.getFetchedMusicVideoList()[previousIndex]) {
+                            is Music -> item.youtubeId
+                            is VideoItem -> item.id
+                            else -> ""
+                        }
+
+                        playbackManager.playingStateOfResponse.value = playbackManager.getFetchedMusicVideoList()[previousIndex]
+
+                        onLoadMediaItem(
+                            videoId,
+                            onSuccessCallback = { videoId, videoUrl ->
+                                playbackManager.setVideo(videoId, videoUrl)
+                            }
+                        )
+                    }
                 }
             )
         }
