@@ -9,6 +9,7 @@ By default, the application utilizes the yt-dl-exec library, which fetches YouTu
 The code of the application will be maintained and changed continuously, and we are currently using MVVM + Clean Architecture (NIA).
 
 ***Currently Status : This project is not working now, the server is shutdowned already.***
+
 ***Backend is available in this repository, and frontend projects are testing streaming playback tests, so they may not work well.***.
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://coff.ee/ydh878787)
