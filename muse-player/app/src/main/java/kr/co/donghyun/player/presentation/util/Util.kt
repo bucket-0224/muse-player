@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import kr.co.donghyun.player.data.album.model.Cookie
+import kr.co.donghyun.player.data.util.Constants
 
 object Util {
     enum class MENU {
@@ -105,4 +106,8 @@ fun getDomainFromUrl(url: String): String {
     } catch (e: Exception) {
         ""
     }
+}
+
+fun generateYoutubeUrl(videoId : String): String {
+    return "${Constants.youtubeBaseUrl}video/stream-features?videoId=${videoId}"
 }

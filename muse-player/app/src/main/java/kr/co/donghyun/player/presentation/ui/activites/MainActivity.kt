@@ -65,7 +65,6 @@ import kr.co.donghyun.player.presentation.components.MinimumPlayingStateComponen
 import kr.co.donghyun.player.presentation.components.VideoDetailComponents
 import kr.co.donghyun.player.presentation.screen.MinimumMusicControllerScreen
 import kr.co.donghyun.player.presentation.screen.PlaylistScreen
-import kr.co.donghyun.player.presentation.screen.SearchScreen
 import kr.co.donghyun.player.presentation.util.SHARED_PREFERENCES
 import kr.co.donghyun.player.presentation.util.Util
 import kr.co.donghyun.player.presentation.util.Util.MENU
@@ -79,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.donghyun.player.data.album.model.Music
+import kr.co.donghyun.player.presentation.screen.HomeScreen
 import kr.co.donghyun.player.presentation.service.MusicPlayerService
 import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.COOKIES_ID
@@ -176,7 +176,7 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
             }) { innerPadding ->
                 when(selectedItem) {
                     0 -> {
-                        SearchScreen(viewModel = this, onPlayMusic = { videoId, playingType, successCallback ->
+                        HomeScreen(viewModel = this, onPlayMusic = { videoId, playingType, successCallback ->
                             if(videoId != currentVideoId) {
                                 onLoadMediaItem(videoId, playingType) { videoId, videoUrl ->
                                     playbackManager.setVideo(videoId, videoUrl)

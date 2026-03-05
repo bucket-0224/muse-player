@@ -42,12 +42,13 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
+import dagger.hilt.android.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.co.donghyun.player.R
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.album.model.VideoItem
 import kr.co.donghyun.player.presentation.components.AlbumDetailComponents
@@ -103,14 +104,14 @@ fun PlaylistScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, pl
                         LazyColumn {
                             item {
                                 Text(
-                                    text = "플레이리스트",
+                                    text = context.getString(R.string.playlistscreen_title),
                                     modifier = Modifier.padding(top = 16.dp),
                                     textAlign = TextAlign.Start,
                                     fontWeight = FontWeight(800),
-                                    fontSize = 32.sp
+                                    fontSize = 24.sp
                                 )
                                 Text(
-                                    text = "담아둔 플레이리스트에요!",
+                                    text = context.getString(R.string.playlistscreen_subtitle),
                                     modifier = Modifier.padding(bottom = 8.dp),
                                     textAlign = TextAlign.Start,
                                     fontWeight = FontWeight(400),

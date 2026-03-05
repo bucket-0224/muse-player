@@ -71,6 +71,7 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
                                     isOnPlaylist.value = false
                                     setUpFetchedMusicVideoList(currentAlbum.value?.musics ?: listOf(), index)
                                 }
+                                putExtra("channelId", intent.getStringExtra("channelId") ?: "")
                                 putExtra("isAnotherMusic", song.youtubeId != if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.youtubeId else (playingStateOfResponse.value as VideoItem?)?.id)
                                 putExtra("videoId", song.youtubeId)
                             })

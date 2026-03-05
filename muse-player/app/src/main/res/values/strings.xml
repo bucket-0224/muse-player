@@ -1,5 +1,11 @@
 <resources>
-    <string name="app_name">Muse</string>
-    <string name="title_activity_album">AlbumActivity</string>
-    <string name="title_activity_search_artist">SearchArtistActivity</string>
+    <string name="app_name" translatable="false">Muse</string>
+    <string name="title_activity_album" translatable="false">AlbumActivity</string>
+    <string name="title_activity_search_artist" translatable="false">SearchArtistActivity</string>
+
+    <string name="homescreen_title">최근 들은 음악</string>
+    <string name="homescreen_subtitle">최근 검색한 아티스트, 음악입니다.</string>
+
+    <string name="playlistscreen_title">플레이리스트</string>
+    <string name="playlistscreen_subtitle">저장한 음악들입니다.</string>
 </resources>

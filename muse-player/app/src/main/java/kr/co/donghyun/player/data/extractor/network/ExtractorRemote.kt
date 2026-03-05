@@ -20,4 +20,10 @@ interface ExtractorRemote {
         @Part cookie : MultipartBody.Part,
         @Query("videoId") videoId : String,
     ) : Response<ExtractorResponseBody>
+
+    @Multipart
+    @POST("video/upload-cookie")
+    suspend fun uploadCookies(
+        @Part cookie : MultipartBody.Part
+    ) : Response<Unit>
 }

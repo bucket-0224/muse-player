@@ -30,6 +30,7 @@ data class Thumbnail(
 
 @Entity
 data class Music(
+    val artistId : String? = null,
     val artists: List<ArtistName>,
     val title: String?,
     @PrimaryKey

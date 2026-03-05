@@ -5,6 +5,7 @@ import okhttp3.MultipartBody
 import retrofit2.Response
 
 interface ExtractorRepository {
+    suspend fun uploadCookies(cookie: MultipartBody.Part) : Response<Unit>
     suspend fun getExtractorUrl(cookie : MultipartBody.Part, videoId : String) : Response<ExtractorResponseBody>
     suspend fun insertExtractorResponse(extractorResponseBody: ExtractorResponseBody)
     suspend fun fetchExtractorResponses() : List<ExtractorResponseBody>

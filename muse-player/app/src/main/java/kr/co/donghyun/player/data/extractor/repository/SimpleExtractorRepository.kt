@@ -11,6 +11,10 @@ class SimpleExtractorRepository @Inject constructor(
     private val remote : ExtractorRemote,
     private val extractorDao: ExtractorDao
 ) : ExtractorRepository {
+    override suspend fun uploadCookies(cookie: MultipartBody.Part): Response<Unit> {
+        return remote.uploadCookies(cookie)
+    }
+
     override suspend fun getExtractorUrl(
         cookie: MultipartBody.Part,
         videoId: String

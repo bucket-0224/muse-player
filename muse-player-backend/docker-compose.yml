@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+    youtube-dl-server:
+        build:
+            context: ./yt-dl-api-server
+            dockerfile: Dockerfile
+        ports:
+            - '5858:5858'
+        volumes:
+            - ./yt-dl-api-server:/usr/src/youtube-dl-server
+        working_dir: /usr/src/youtube-dl-server
+        command: ['npm', 'start']

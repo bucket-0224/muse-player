@@ -21,10 +21,12 @@ import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.data.album.model.AlbumDetailResponse
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
+import kr.co.donghyun.player.data.util.Constants
 import kr.co.donghyun.player.domain.AlbumUseCase
 import kr.co.donghyun.player.domain.ExtractorUseCase
 import kr.co.donghyun.player.presentation.base.BaseViewModel
 import kr.co.donghyun.player.presentation.util.PlaybackManager
+import kr.co.donghyun.player.presentation.util.generateYoutubeUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -59,53 +61,30 @@ class AlbumViewModel @Inject constructor(
         }
     }
 
+
     fun getYoutubeUrlById(cookie : File, videoId : String, onPreparedExoPlayer : (String) -> Unit, onError : () -> Unit) {
         if(loadMediaCoroutineJob?.isActive == true) {
             loadMediaCoroutineJob?.cancel()
         }
 
         loadMediaCoroutineJob = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val cookiesFile = cookie.asRequestBody("text/plain".toMediaTypeOrNull())
-                val multipartCookie = MultipartBody.Part.createFormData("cookie", cookie.name, cookiesFile)
-                val response = extractorUseCase.getExtractorUrl(multipartCookie, videoId)
+            withContext(Dispatchers.Main) {
+                exoPlayer.run {
 
-                if(response.isSuccessful) {
-                    val body = response.body()
+                    val cookiesFile = cookie.asRequestBody("text/plain".toMediaTypeOrNull())
+                    val multipartCookie = MultipartBody.Part.createFormData("cookie", cookie.name, cookiesFile)
+                    extractorUseCase.uploadCookies(multipartCookie)
 
-                    if (body != null) {
-                        withContext(Dispatchers.Main) {
-                            exoPlayer.run {
-                                val mediaItem = if(body.url != null) {
-                                    MediaItem.Builder()
-                                        .setUri(body.url.toUri())
-                                        .setMediaMetadata(
-                                            MediaMetadata.Builder()
-                                                .setTitle(body.title)
-                                                .setArtist(body.artist)
-                                                .build()
-                                        )
-                                        .build()
-                                } else null
+                    val url = generateYoutubeUrl(videoId)
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(url.toUri())
+                        .build()
 
-                                if(mediaItem != null) {
-                                    setMediaItem(mediaItem)
-                                    prepare()
-                                    onPreparedExoPlayer(body.url ?: "")
-                                }
-                            }
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                            onError()
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                        onError()
-                    }
+                    println("url : ${url}, uri : ${url.toUri()}")
+
+                    setMediaItem(mediaItem)
+                    prepare()
+                    onPreparedExoPlayer(url)
                 }
             }
         }

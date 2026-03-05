@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Muse</string>
+    <string name="homescreen_title">Latest Listened Music</string>
+    <string name="homescreen_subtitle">"Artist, music, that you recently searched for. "</string>
+    <string name="playlistscreen_title">Playlist</string>
+    <string name="playlistscreen_subtitle">Saved Musics.</string>
+</resources>

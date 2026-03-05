@@ -209,6 +209,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                             playWhenReady = true
                             val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
                                 action = "ACTION_PLAY"
+//                                putExtra("channelId", )
                                 putExtra("videoId", videoId)
                                 putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
                             }

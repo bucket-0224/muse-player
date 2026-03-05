@@ -2,10 +2,12 @@ package kr.co.donghyun.player.presentation.screen
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +61,7 @@ import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.Util
 import kr.co.donghyun.player.presentation.viewmodel.PlayerViewModel
 import androidx.core.net.toUri
+import kr.co.donghyun.player.presentation.ui.activites.SearchArtistActivity
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -174,7 +177,29 @@ fun PlayerScreen(
                         .fillMaxWidth()
                         .padding(bottom = 8.dp, start = 32.dp, end = 32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.Start) {
                         Text(text = if(data is Music?) data?.title.orEmpty() else if(data is VideoItem?) data.title else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, fontWeight = FontWeight(900), color = Color.White, fontSize = 24.sp)
-                        Text(text = if(data is Music?) data?.artists?.first()?.name.orEmpty() else if(data is VideoItem?) data.channel.name else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, color = Color.White, fontSize = 18.sp)
+
+                        Text(
+                            text = if(data is Music?)
+                                data?.artists?.first()?.name.orEmpty()
+                            else if(data is VideoItem?)
+                                data.channel.name
+                            else "",
+                            modifier = Modifier.basicMarquee().clickable {
+                                context.startActivity(Intent(context, SearchArtistActivity::class.java).apply {
+//                                    putExtra("channelId",
+//                                        if(data is Music?)
+//                                            data?.artists?.first()?.channelId
+//                                        else if(data is VideoItem?)
+//                                            data.channel.id
+//                                        else ""
+//                                    )
+                                })
+                            },
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                        )
                         Spacer(modifier = Modifier.padding(bottom = 24.dp))
                     }
                     PlayerComponents(onValueChange = {

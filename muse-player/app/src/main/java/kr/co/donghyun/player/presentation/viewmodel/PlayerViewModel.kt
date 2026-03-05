@@ -119,7 +119,8 @@ class PlayerViewModel @Inject constructor(
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     albumUseCase.insertMusic(music.copy(
-                        insertedAt = Date()
+                        insertedAt = Date(),
+                        artistId = ""
                     ))
                 }
 
