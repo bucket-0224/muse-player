@@ -7,7 +7,7 @@ import fs from 'fs';
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/features', upload.single('cookie'), async (req, res, next) => {
+router.get('/features', async (req, res, next) => {
     try {
         await youtubeVideoController.getVideoFeaturesByVideoId(req, res, next);
     } catch (error) {
@@ -15,9 +15,25 @@ router.post('/features', upload.single('cookie'), async (req, res, next) => {
     }
 });
 
-router.use('/stream-audio', async (req, res, next) => {
+router.use('/feature-shorts', async (req, res, next) => {
     try {
-        await youtubeVideoController.getStreamVideoFeatruesVideo(req, res);
+        await youtubeVideoController.getShortsVideo(req, res);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.use('/stream-shorts', async (req, res, next) => {
+    try {
+        await youtubeVideoController.getStreamShortFeaturesVideo(req, res);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.use('/stream-features', async (req, res, next) => {
+    try {
+        await youtubeVideoController.getStreamVideoFeaturesVideo(req, res);
     } catch (error) {
         next(error);
     }

@@ -1,6 +1,7 @@
 package kr.co.donghyun.player.data.extractor.network
 
 import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
+import kr.co.donghyun.player.data.extractor.model.ShortResponse
 import kr.co.donghyun.player.data.util.Constants
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -20,6 +21,11 @@ interface ExtractorRemote {
         @Part cookie : MultipartBody.Part,
         @Query("videoId") videoId : String,
     ) : Response<ExtractorResponseBody>
+
+    @GET("video/feature-shorts")
+    suspend fun getFeatureShorts(
+        @Query("keyword") keyword : String,
+    ) : Response<ShortResponse>
 
     @Multipart
     @POST("video/upload-cookie")

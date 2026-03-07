@@ -28,9 +28,13 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -72,16 +76,18 @@ import kr.co.donghyun.player.presentation.util.appendCookiesNetscapeFormat
 import kr.co.donghyun.player.presentation.viewmodel.MainViewModel
 import androidx.core.content.edit
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
+import dagger.hilt.android.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.presentation.screen.HomeScreen
+import kr.co.donghyun.player.presentation.screen.ShortsScreen
 import kr.co.donghyun.player.presentation.service.MusicPlayerService
 import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.COOKIES_ID
+import kr.co.donghyun.player.presentation.util.generateYoutubeUrl
 import java.io.File
 
 @AndroidEntryPoint
@@ -146,14 +152,16 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
             val isPlayingSong = remember { playbackManager.playingStateOfResponse }
             val currentVideoId by playbackManager.currentPlayingVideoId.collectAsState()
             var selectedItem by remember { mutableIntStateOf(0) }
-            val items = listOf(MENU.HOME, MENU.PLAYLIST)
-            val selectedIcons = listOf(Icons.Filled.Home, Icons.AutoMirrored.Filled.List)
-            val unselectedIcons = listOf(Icons.Outlined.Home, Icons.AutoMirrored.Outlined.List)
+            val items = listOf(MENU.HOME, MENU.PLAYLIST, MENU.SHORT, MENU.SETTING)
+            val selectedIcons = listOf(Icons.Filled.Home, Icons.AutoMirrored.Filled.List, Icons.Filled.PlayArrow, Icons.Filled.Person)
+            val unselectedIcons = listOf(Icons.Outlined.Home, Icons.AutoMirrored.Outlined.List, Icons.Outlined.PlayArrow, Icons.Outlined.Person)
 
             Scaffold(modifier = Modifier.fillMaxSize(), bottomBar = {
                 Column {
                     // 플레이어 UI를 BottomBar 위에 추가
-                    MinimumPlayingStateComponents(isPlaying = exoPlayer.isPlaying, paddingValues = PaddingValues(top = 0.dp, bottom = 24.dp), playbackManager = playbackManager, playingMusic = isPlayingSong.value)
+
+                    if(selectedItem != MENU.SHORT.ordinal)
+                        MinimumPlayingStateComponents(isPlaying = exoPlayer.isPlaying, paddingValues = PaddingValues(top = 0.dp, bottom = 24.dp), playbackManager = playbackManager, playingMusic = isPlayingSong.value)
 
                     // 네비게이션 바 유지
                     NavigationBar {
@@ -165,7 +173,6 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
                                         contentDescription = item.name
                                     )
                                 },
-                                label = { Text(item.name) },
                                 selected = selectedItem == index,
                                 onClick = { selectedItem = index }
                             )
@@ -178,10 +185,9 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
                     0 -> {
                         HomeScreen(viewModel = this, onPlayMusic = { videoId, playingType, successCallback ->
                             if(videoId != currentVideoId) {
-                                onLoadMediaItem(videoId, playingType) { videoId, videoUrl ->
-                                    playbackManager.setVideo(videoId, videoUrl)
-                                    successCallback()
-                                }
+                                Log.d("video", "videoId : $videoId")
+                                playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
+                                successCallback()
                             } else {
                                 successCallback()
                             }
@@ -191,93 +197,19 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
                     1 -> {
                         PlaylistScreen(viewModel = this, onPlayMusic = { videoId, playingType, successCallback ->
                             if(videoId != currentVideoId) {
-                                onLoadMediaItem(videoId, playingType) { videoId, videoUrl ->
-                                    playbackManager.setVideo(videoId, videoUrl)
-                                    successCallback()
-                                }
+                                playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
+                                successCallback()
                             } else {
                                 successCallback()
                             }
                         }, innerPadding)
                     }
-                }
-            }
-        }
-    }
 
-    @OptIn(UnstableApi::class)
-    fun onLoadMediaItem(videoId: String, playingType : String, successCallback : (videoId : String, videoUrl : String) -> Unit) {
-        with(viewModel) {
-            Log.d("TAG", "playingId Compare : $videoId , ${playbackManager.currentPlayingVideoId.value}")
-            if(exoPlayer.isPlaying) {
-                exoPlayer.stop()
-            }
-
-            playbackManager.currentMusicSeekBarPosition.floatValue = 0F
-            playbackManager.currentMusicPosition.longValue = 0L
-            playbackManager.musicDuration.longValue = 0L
-
-            val cookies = getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE).getString(COOKIES_ID, "").orEmpty()
-
-            val cookiesFile = File(cacheDir, "cookies.txt")
-            cookiesFile.bufferedWriter().use { writer ->
-                writer.write(cookies)
-            }
-
-            getYoutubeUrlById(
-                cookie = cookiesFile,
-                videoId,
-                onPreparedExoPlayer = { videoUrl ->
-                    val intent = Intent(this@MainActivity, MusicPlayerService::class.java).apply {
-                        action = "ACTION_PLAY"
-                        putExtra("videoId", intent.getStringExtra("videoId"))
-                        putExtra("playingType", playingType)
-                        putExtra("imageUrl",
-                            if(playbackManager.playingStateOfResponse.value is Music?)
-                                    (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl
-                            else
-                                    (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
-                    }
-                    ContextCompat.startForegroundService(this@MainActivity, intent)
-
-                    exoPlayer.run {
-                        playWhenReady = true
-
-                        addListener(object : Player.Listener {
-                            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                                playbackManager.isPlayingState.value = isPlaying
-
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    while (isPlaying) {
-                                        val duration = exoPlayer.duration.toFloat()
-                                        val currentPosition = exoPlayer.currentPosition.toFloat()
-
-                                        playbackManager.currentMusicPosition.longValue = exoPlayer.currentPosition
-                                        playbackManager.currentMusicSeekBarPosition.floatValue = (currentPosition / duration).coerceIn(0.0f, 1.0f)
-
-                                        delay(1000L)
-                                    }
-                                }
-
-                                super.onIsPlayingChanged(isPlaying)
-                            }
-                            override fun onPlaybackStateChanged(playbackState: Int) {
-                                super.onPlaybackStateChanged(playbackState)
-                                playbackManager.musicDuration.longValue = duration
-                            }
-                        })
-                    }
-
-                    successCallback(videoId, videoUrl)
-                },
-                onError = {
-                    getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE).edit {
-                        remove(COOKIES_ID)
-                        Toast.makeText(this@MainActivity, "로그인 세션이 만료되었습니다. 재로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
-                        showUpBottomSheet(true)
+                    2 -> {
+                        ShortsScreen(viewModel = this)
                     }
                 }
-            )
+            }
         }
     }
 

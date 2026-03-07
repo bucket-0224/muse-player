@@ -9,4 +9,5 @@ import javax.inject.Inject
 class ExtractorUseCase @Inject constructor(private val extractorRepository: ExtractorRepository) {
     suspend fun getExtractorUrl(cookie : MultipartBody.Part, videoId : String) = extractorRepository.getExtractorUrl(cookie, videoId)
     suspend fun uploadCookies(cookie: MultipartBody.Part) = extractorRepository.uploadCookies(cookie)
+    suspend fun getShortFeatures(keyword : String) = extractorRepository.getFeatureShorts(keyword)
 }

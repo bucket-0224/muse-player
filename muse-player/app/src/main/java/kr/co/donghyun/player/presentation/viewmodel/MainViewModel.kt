@@ -12,6 +12,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.data.album.model.Music
@@ -42,11 +45,27 @@ class MainViewModel @Inject constructor(
     val searchedArtists = mutableStateListOf<ArtistPreview?>()
     val recentlySearchedArtists = mutableStateListOf<ArtistPreview?>()
     val recentlySearchedArtistsAlbums = mutableStateListOf<List<Album>>()
+    private val _shortsList = MutableStateFlow<List<String>>(emptyList())
+    val shortsList: StateFlow<List<String>> = _shortsList.asStateFlow()
+
     var loadMediaCoroutineJob : Job? = null
     var searchCoroutineJob : Job? = null
 
     init {
         fetchMyPlaylist()
+    }
+
+    fun fetchShortsList() {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    extractorUseCase.getShortFeatures(keyword = "데이먼스").body()?.videoIds ?: listOf()
+                }
+                _shortsList.value = result // 데이터가 로드되면 상태 업데이트
+            } catch (e: Exception) {
+                // 에러 처리
+            }
+        }
     }
 
     fun fetchMyPlaylist(onRefreshed : () -> Unit = {}) {

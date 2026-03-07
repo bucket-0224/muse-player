@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
-import { pipeline } from 'stream';
+import YouTube from 'youtube-sr';
 import { promisify } from 'util';
 import fetch from 'node-fetch';
 import { spawn } from 'child_process';
@@ -27,13 +27,6 @@ interface CacheEntry {
     expiresAt: number;
 }
 
-const ytdlAgent = ytdl.createAgent();
-const proxyAgent = new https.Agent({
-    keepAlive: true,
-    keepAliveMsecs: 10000,
-    maxSockets: Infinity,
-});
-
 async function uploadCookiesForStreamVideo(req: express.Request, res: express.Response, next: express.NextFunction) {
     if (!req.file) return res.status(400).json({ message: 'No cookie file' });
 
@@ -43,7 +36,24 @@ async function uploadCookiesForStreamVideo(req: express.Request, res: express.Re
     return res.status(200).json({ message: 'Cookie uploaded' });
 }
 
-async function getStreamVideoFeatruesVideo(req: express.Request, res: express.Response) {
+async function getShortsVideo(req: express.Request, res: express.Response) {
+    const { keyword } = req.query;
+
+    if (!keyword || typeof keyword !== 'string') {
+        return res.status(400).json({ message: 'keyword required' });
+    }
+
+    const videos = await YouTube.search(keyword as string, {
+        type: 'video',
+        limit: 20,
+    });
+
+    return res.status(200).json({
+        videoIds: videos.map((video) => video.id ?? ''),
+    });
+}
+
+async function getStreamShortFeaturesVideo(req: express.Request, res: express.Response) {
     const { videoId } = req.query;
 
     if (!videoId || typeof videoId !== 'string') {
@@ -51,101 +61,184 @@ async function getStreamVideoFeatruesVideo(req: express.Request, res: express.Re
     }
 
     try {
-        let audioUrl: string | undefined;
         const now = Date.now();
         const cached = videoUrlCache.get(videoId);
+        let audioUrl: string;
 
-        // 2️⃣ [최적화] 캐시 확인 및 만료 체크
+        // 1️⃣ [속도 최적화] 유효 캐시 즉시 반환
         if (cached && cached.expiresAt > now) {
             audioUrl = cached.url;
         } else {
-            // 캐시가 없거나 만료됨 -> 새로 추출
-            try {
-                // yt-dlp(Python) 대신 Node.js 네이티브 라이브러리 사용 (속도: 3s -> 0.3s)
-                const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${videoId}`, {
-                    agent: ytdlAgent, // 에이전트 주입
-                });
+            // 2️⃣ [성능 최적화] yt-dlp 호출 시 불필요한 메타데이터 로드 방지
+            // --get-url 옵션을 사용하여 오직 URL만 빠르게 추출합니다.
+            const output = await youtubeDl(`https://www.youtube.com/watch?v=${videoId}`, {
+                getUrl: true,
+                format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                noWarnings: true,
+                noCheckCertificates: true,
+            });
 
-                // 오디오 포맷 중 'audio/mp4' (m4a)에 가장 적합한 포맷 필터링
-                const format = ytdl.chooseFormat(info.formats, {
-                    quality: 'highestaudio',
-                    filter: 'audioonly',
-                });
+            audioUrl = typeof output === 'string' ? output.trim() : (output as any).stdout.trim();
 
-                if (format && format.url) {
-                    audioUrl = format.url;
-                    // 유튜브 URL은 보통 6시간 뒤 만료되므로 1시간만 캐시
-                    videoUrlCache.set(videoId, { url: audioUrl, expiresAt: now + CACHE_DURATION });
-                }
-            } catch (e) {
-                console.error('Info extraction error:', e);
-                return res.status(500).json({ message: 'Failed to extract URL' });
-            }
+            if (!audioUrl) throw new Error('Failed to extract URL');
+
+            videoUrlCache.set(videoId, { url: audioUrl, expiresAt: now + CACHE_DURATION });
         }
 
-        if (!audioUrl) {
-            return res.status(500).json({ message: 'Audio URL not found' });
-        }
-
-        // 3️⃣ [스트리밍] Range 헤더 처리 및 프록시
+        // 3️⃣ [스트리밍/Range 처리]
         const range = req.headers.range;
+        const urlObj = new URL(audioUrl);
+
         const options: https.RequestOptions = {
+            hostname: urlObj.hostname,
+            path: `${urlObj.pathname}${urlObj.search}`,
+            method: 'GET',
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...', // 기존 유지
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                Range: range || 'bytes=0-', // Range가 없더라도 초기 바이트 요청
+                Connection: 'keep-alive',
             },
-            agent: proxyAgent, // 연결 재사용
         };
 
-        if (range && options.headers) {
-            options.headers['Range'] = range;
-        }
-
-        const proxyReq = https.request(audioUrl, options, (proxyRes) => {
-            // 403 발생 시 캐시 즉시 삭제 및 재시도 로직(선택적) 또는 에러 리턴
+        const proxyReq = https.request(options, (proxyRes) => {
+            // 403 발생 시 캐시 파괴 및 재시도 유도
             if (proxyRes.statusCode === 403) {
                 videoUrlCache.delete(videoId);
-                if (!res.headersSent) return res.status(403).send('Link Expired');
-                return;
+                return res.status(410).json({ message: 'Link expired, please retry' });
             }
 
-            const statusCode = proxyRes.statusCode || 200;
+            // 필수 헤더 전달 (브라우저 플레이어 호환성)
+            res.status(proxyRes.statusCode || 200);
 
-            // 헤더 복사
-            const headersToForward = [
+            const forwardHeaders = [
                 'content-type',
                 'content-length',
                 'content-range',
                 'accept-ranges',
-                'content-disposition',
-                'date',
-                'last-modified',
+                'cache-control',
             ];
 
-            headersToForward.forEach((key) => {
-                if (proxyRes.headers[key]) res.setHeader(key, proxyRes.headers[key]!);
+            forwardHeaders.forEach((h) => {
+                if (proxyRes.headers[h]) res.setHeader(h, proxyRes.headers[h]!);
             });
 
-            // iOS/Safari 호환성 강제 설정
-            res.setHeader('Content-Type', 'audio/mp4');
+            // iOS 및 모바일 브라우저 최적화 헤더
             res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Connection', 'keep-alive'); // 클라이언트와도 연결 유지
+            res.setHeader('X-Content-Type-Options', 'nosniff');
 
-            res.writeHead(statusCode);
+            // 4️⃣ [효율적 파이핑]
             proxyRes.pipe(res);
         });
 
-        proxyReq.on('error', (e) => {
-            console.error('Proxy Error:', e);
-            if (!res.headersSent) res.end();
+        proxyReq.on('error', (err) => {
+            console.error('Proxy request error:', err);
+            if (!res.headersSent) res.status(500).end();
+        });
+
+        // 클라이언트가 연결을 끊으면 업스트림 요청도 즉시 중단 (리소스 절약)
+        req.on('close', () => {
+            proxyReq.destroy();
         });
 
         proxyReq.end();
-
-        req.on('close', () => {
-            if (!proxyReq.destroyed) proxyReq.destroy();
-        });
     } catch (error) {
-        console.error('Handler Error:', error);
+        console.error('Final Handler Error:', error);
+        if (!res.headersSent) res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
+async function getStreamVideoFeaturesVideo(req: express.Request, res: express.Response) {
+    const { videoId } = req.query;
+
+    if (!videoId || typeof videoId !== 'string') {
+        return res.status(400).json({ message: 'videoId required' });
+    }
+
+    try {
+        const now = Date.now();
+        const cached = videoUrlCache.get(videoId);
+        let audioUrl: string;
+
+        // 1️⃣ [속도 최적화] 유효 캐시 즉시 반환
+        if (cached && cached.expiresAt > now) {
+            audioUrl = cached.url;
+        } else {
+            // 2️⃣ [성능 최적화] yt-dlp 호출 시 불필요한 메타데이터 로드 방지
+            // --get-url 옵션을 사용하여 오직 URL만 빠르게 추출합니다.
+            const output = await youtubeDl(`https://www.youtube.com/watch?v=${videoId}`, {
+                getUrl: true,
+                format: 'bestaudio[ext=m4a]/bestaudio', // iOS 호환성을 위한 m4a 우선 순위
+                noWarnings: true,
+                noCheckCertificates: true,
+            });
+
+            audioUrl = typeof output === 'string' ? output.trim() : (output as any).stdout.trim();
+
+            if (!audioUrl) throw new Error('Failed to extract URL');
+
+            videoUrlCache.set(videoId, { url: audioUrl, expiresAt: now + CACHE_DURATION });
+        }
+
+        // 3️⃣ [스트리밍/Range 처리]
+        const range = req.headers.range;
+        const urlObj = new URL(audioUrl);
+
+        const options: https.RequestOptions = {
+            hostname: urlObj.hostname,
+            path: `${urlObj.pathname}${urlObj.search}`,
+            method: 'GET',
+            headers: {
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                Range: range || 'bytes=0-', // Range가 없더라도 초기 바이트 요청
+                Connection: 'keep-alive',
+            },
+        };
+
+        const proxyReq = https.request(options, (proxyRes) => {
+            // 403 발생 시 캐시 파괴 및 재시도 유도
+            if (proxyRes.statusCode === 403) {
+                videoUrlCache.delete(videoId);
+                return res.status(410).json({ message: 'Link expired, please retry' });
+            }
+
+            // 필수 헤더 전달 (브라우저 플레이어 호환성)
+            res.status(proxyRes.statusCode || 200);
+
+            const forwardHeaders = [
+                'content-type',
+                'content-length',
+                'content-range',
+                'accept-ranges',
+                'cache-control',
+            ];
+
+            forwardHeaders.forEach((h) => {
+                if (proxyRes.headers[h]) res.setHeader(h, proxyRes.headers[h]!);
+            });
+
+            // iOS 및 모바일 브라우저 최적화 헤더
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+
+            // 4️⃣ [효율적 파이핑]
+            proxyRes.pipe(res);
+        });
+
+        proxyReq.on('error', (err) => {
+            console.error('Proxy request error:', err);
+            if (!res.headersSent) res.status(500).end();
+        });
+
+        // 클라이언트가 연결을 끊으면 업스트림 요청도 즉시 중단 (리소스 절약)
+        req.on('close', () => {
+            proxyReq.destroy();
+        });
+
+        proxyReq.end();
+    } catch (error) {
+        console.error('Final Handler Error:', error);
         if (!res.headersSent) res.status(500).json({ message: 'Internal Server Error' });
     }
 }
@@ -153,20 +246,15 @@ async function getStreamVideoFeatruesVideo(req: express.Request, res: express.Re
 async function getVideoFeaturesByVideoId(req: express.Request, res: express.Response, next: express.NextFunction) {
     const { videoId } = req.query;
 
-    if (!req.file || !videoId) {
+    if (!videoId) {
         return res.status(400).json({ message: 'Missing cookie file or videoId' });
     }
-
-    // 1. 쿠키 임시 파일로 저장
-    const tempCookiePath = path.join(os.tmpdir(), `cookie-${uuidv4()}.txt`);
-    fs.writeFileSync(tempCookiePath, req.file.buffer);
 
     const videoGetByYoutubeWatchId: any = await youtube_dl(`https://www.youtube.com/watch?v=${videoId}`, {
         dumpSingleJson: true,
         noCheckCertificates: true,
         noWarnings: true,
         skipDownload: true,
-        cookies: tempCookiePath,
         preferFreeFormats: true,
         addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
     });
@@ -182,12 +270,15 @@ async function getVideoFeaturesByVideoId(req: express.Request, res: express.Resp
         artist: videoGetByYoutubeWatchId['artist'] ?? videoGetByYoutubeWatchId['uploader'],
         thumbnail: videoGetByYoutubeWatchId['thumbnail'],
         videoId: videoId,
+        fullJson: videoGetByYoutubeWatchId,
         message: 'youtube link generated.',
     });
 }
 
 export default {
     getVideoFeaturesByVideoId,
-    getStreamVideoFeatruesVideo,
+    getStreamVideoFeaturesVideo,
+    getShortsVideo,
+    getStreamShortFeaturesVideo,
     uploadCookiesForStreamVideo,
 };

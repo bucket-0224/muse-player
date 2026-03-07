@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import kr.co.donghyun.player.presentation.util.Util
 import kr.co.donghyun.player.presentation.viewmodel.PlayerViewModel
 import java.io.File
 import androidx.core.content.edit
+import kr.co.donghyun.player.presentation.util.generateYoutubeUrl
 
 @AndroidEntryPoint
 class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
@@ -52,6 +54,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
         overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, R.anim.slide_no_animation, R.anim.slide_down_animation)
     }
 
+    @OptIn(UnstableApi::class)
     @Composable
     override fun OnViewCreated() {
         with(viewModel) {
@@ -61,6 +64,48 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
             val currentMusicPosition = remember { playbackManager.currentMusicPosition }
             val musicDuration = remember { playbackManager.musicDuration }
             val isOnPlaylist = remember { playbackManager.isOnPlaylist }
+
+            LaunchedEffect(rememberGetMusicDetail) {
+                exoPlayer.run {
+
+                    playWhenReady = true
+
+                    val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
+                        action = "ACTION_PLAY"
+                        putExtra("videoId", intent.getStringExtra("videoId"))
+                        putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
+                    }
+
+                    ContextCompat.startForegroundService(this@PlayerActivity, intent)
+
+                    addListener(object : Player.Listener {
+
+                        override fun onIsPlayingChanged(isPlaying: Boolean) {
+                            playbackManager.isPlayingState.value = isPlaying
+
+                            CoroutineScope(Dispatchers.Main).launch {
+                                while (isPlaying) {
+                                    val duration = exoPlayer.duration.toFloat()
+                                    val currentPosition = exoPlayer.currentPosition.toFloat()
+
+                                    playbackManager.currentMusicPosition.longValue = exoPlayer.currentPosition
+                                    playbackManager.currentMusicSeekBarPosition.floatValue = (currentPosition / duration).coerceIn(0.0f, 1.0f)
+
+                                    delay(1000L)
+                                }
+                            }
+
+                            super.onIsPlayingChanged(isPlaying)
+
+                        }
+
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            super.onPlaybackStateChanged(playbackState)
+                            playbackManager.musicDuration.longValue = duration
+                        }
+                    })
+                }
+            }
 
             PlayerScreen(
                 currentMusicPosition = currentMusicPosition,
@@ -94,13 +139,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         }
 
                         playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[nextIndex]
-
-                        onLoadMediaItem(
-                            videoId,
-                            onSuccessCallback = { videoId, videoUrl ->
-                                playbackManager.setVideo(videoId, videoUrl)
-                            }
-                        )
+                        playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
                     } else {
                         val nextIndex = if (playbackManager.currentPlayingVideoMusicIndex.intValue >= playbackManager.getFetchedMusicVideoList().lastIndex) {
                             0
@@ -117,13 +156,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         }
 
                         playbackManager.playingStateOfResponse.value = playbackManager.getFetchedMusicVideoList()[nextIndex]
-
-                        onLoadMediaItem(
-                            videoId,
-                            onSuccessCallback = { videoId, videoUrl ->
-                                playbackManager.setVideo(videoId, videoUrl)
-                            }
-                        )
+                        playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
                     }
                 },
                 onPreviousMusic = {
@@ -143,13 +176,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         }
 
                         playbackManager.playingStateOfResponse.value = playbackManager.getFetchedPlaylist()[previousIndex]
-
-                        onLoadMediaItem(
-                            videoId,
-                            onSuccessCallback = { videoId, videoUrl ->
-                                playbackManager.setVideo(videoId, videoUrl)
-                            }
-                        )
+                        playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
                     } else {
                         val previousIndex = if (playbackManager.currentPlayingVideoMusicIndex.intValue <= 0) {
                             playbackManager.getFetchedMusicVideoList().lastIndex
@@ -166,94 +193,15 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         }
 
                         playbackManager.playingStateOfResponse.value = playbackManager.getFetchedMusicVideoList()[previousIndex]
-
-                        onLoadMediaItem(
-                            videoId,
-                            onSuccessCallback = { videoId, videoUrl ->
-                                playbackManager.setVideo(videoId, videoUrl)
-                            }
-                        )
+                        playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
                     }
                 }
             )
         }
     }
 
-    @OptIn(UnstableApi::class)
-    fun onLoadMediaItem(videoId: String? = null, onSuccessCallback : (videoId : String, videoUrl : String) -> Unit) {
-        with(viewModel) {
-            val videoId = videoId ?: intent.getStringExtra("videoId")
-            val isAnotherMusic = playbackManager.currentPlayingVideoId.value != videoId
 
-            if(!videoId.isNullOrBlank() && isAnotherMusic) {
-                if(exoPlayer.isPlaying) {
-                    exoPlayer.stop()
-                }
 
-                playbackManager.currentMusicSeekBarPosition.floatValue = 0F
-                playbackManager.currentMusicPosition.longValue = 0L
-                playbackManager.musicDuration.longValue = 0L
-
-                val cookies = getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE).getString(COOKIES_ID, "").orEmpty()
-
-                val cookiesFile = File(cacheDir, "cookies.txt")
-                cookiesFile.bufferedWriter().use { writer ->
-                    writer.write(cookies)
-                }
-
-                getYoutubeUrlById(
-                    cookie = cookiesFile,
-                    videoId,
-                    onPreparedExoPlayer = { videoUrl ->
-                        exoPlayer.run {
-                            playWhenReady = true
-                            val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
-                                action = "ACTION_PLAY"
-//                                putExtra("channelId", )
-                                putExtra("videoId", videoId)
-                                putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
-                            }
-                            ContextCompat.startForegroundService(this@PlayerActivity, intent)
-
-                            addListener(object : Player.Listener {
-                                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                                    playbackManager.isPlayingState.value = isPlaying
-
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        while (isPlaying) {
-                                            val duration = exoPlayer.duration.toFloat()
-                                            val currentPosition = exoPlayer.currentPosition.toFloat()
-
-                                            playbackManager.currentMusicPosition.longValue = exoPlayer.currentPosition
-                                            playbackManager.currentMusicSeekBarPosition.floatValue = (currentPosition / duration).coerceIn(0.0f, 1.0f)
-
-                                            delay(1000L)
-                                        }
-                                    }
-
-                                    super.onIsPlayingChanged(isPlaying)
-                                }
-                                override fun onPlaybackStateChanged(playbackState: Int) {
-                                    super.onPlaybackStateChanged(playbackState)
-                                    playbackManager.musicDuration.longValue = duration
-                                }
-                            })
-                        }
-                        onSuccessCallback(videoId, videoUrl)
-                    },
-                    onError = {
-                        getSharedPreferences(SHARED_PREFERENCES, MODE_PRIVATE).edit {
-                            remove(COOKIES_ID)
-                            Toast.makeText(this@PlayerActivity, "로그인 세션이 만료되었습니다. 재로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
-                            showUpBottomSheet(true)
-                        }
-                    }
-                )
-            } else {
-                isExtracted.value = playbackManager.playingStateOfResponse.value != null
-            }
-        }
-    }
 
     override fun onResume() {
         super.onResume()

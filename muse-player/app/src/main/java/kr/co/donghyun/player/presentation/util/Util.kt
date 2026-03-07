@@ -14,7 +14,9 @@ import kr.co.donghyun.player.data.util.Constants
 object Util {
     enum class MENU {
         HOME,
-        PLAYLIST
+        PLAYLIST,
+        SHORT,
+        SETTING
     }
 
     enum class SEARCH {
@@ -106,6 +108,10 @@ fun getDomainFromUrl(url: String): String {
     } catch (e: Exception) {
         ""
     }
+}
+
+fun generateShortYoutubeUrl(videoId : String): String {
+    return "${Constants.youtubeBaseUrl}video/stream-shorts?videoId=${videoId}"
 }
 
 fun generateYoutubeUrl(videoId : String): String {

@@ -72,7 +72,6 @@ abstract class BaseComponentActivity<VM : BaseViewModel> : ComponentActivity() {
         )
         var showBottomSheet by remember { viewModel.showUpStatus }
 
-
         LaunchedEffect(showBottomSheet) {
             if (showBottomSheet && !modalBottomSheetState.isVisible) {
                 modalBottomSheetState.show()

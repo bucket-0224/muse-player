@@ -165,7 +165,7 @@ fun PlaylistScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, pl
                                 modifier = Modifier.padding(top = 16.dp),
                                 textAlign = TextAlign.Start,
                                 fontWeight = FontWeight(800),
-                                fontSize = 32.sp
+                                fontSize = 24.sp
                             )
                             Text(
                                 text = "담아둔 플레이리스트에요!",
