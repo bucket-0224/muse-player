@@ -272,7 +272,7 @@ fun HomeScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playin
                                                     isClickable.value = false
                                                     context.startActivity(Intent(context, PlayerActivity::class.java).apply {
                                                         putExtra("videoId", video?.id)
-                                                        putExtra("isAnotherMusic", video?.id != if(playingStateOfResponse.value is VideoItem?) (playingStateOfResponse.value as VideoItem?)?.id else (playingStateOfResponse.value as Music?)?.youtubeId)
+                                                        putExtra("isNewPlaying", video?.id != if(playingStateOfResponse.value is VideoItem?) (playingStateOfResponse.value as VideoItem?)?.id else (playingStateOfResponse.value as Music?)?.youtubeId)
                                                         putExtra("playingType", Util.SEARCH.VIDEO.name)
 
                                                         playbackManager.setUpFetchedMusicVideoList(searchedVideos.toList(), searchedVideos.indexOf(video))

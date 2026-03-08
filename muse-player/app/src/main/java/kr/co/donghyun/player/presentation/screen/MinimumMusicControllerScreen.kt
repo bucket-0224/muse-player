@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
 import kr.co.donghyun.player.presentation.components.MinimumPlayingStateComponents
 import kr.co.donghyun.player.presentation.util.PlaybackManager
 

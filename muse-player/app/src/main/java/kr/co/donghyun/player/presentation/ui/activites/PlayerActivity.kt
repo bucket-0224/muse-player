@@ -66,44 +66,46 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
             val isOnPlaylist = remember { playbackManager.isOnPlaylist }
 
             LaunchedEffect(rememberGetMusicDetail) {
-                extractMusicAndPlaying(videoId = intent.getStringExtra("videoId") ?: "", generateYoutubeUrl(intent.getStringExtra("videoId") ?: ""))
-                exoPlayer.run {
-                    playWhenReady = true
+                if(intent.getBooleanExtra("isNewPlaying", false)) {
+                    extractMusicAndPlaying(videoId = intent.getStringExtra("videoId") ?: "", generateYoutubeUrl(intent.getStringExtra("videoId") ?: ""))
+                    exoPlayer.run {
+                        playWhenReady = true
 
-                    val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
-                        action = "ACTION_PLAY"
-                        putExtra("videoId", intent.getStringExtra("videoId"))
-                        putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
-                    }
+                        val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
+                            action = "ACTION_PLAY"
+                            putExtra("videoId", intent.getStringExtra("videoId"))
+                            putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
+                        }
 
-                    ContextCompat.startForegroundService(this@PlayerActivity, intent)
+                        ContextCompat.startForegroundService(this@PlayerActivity, intent)
 
-                    addListener(object : Player.Listener {
+                        addListener(object : Player.Listener {
 
-                        override fun onIsPlayingChanged(isPlaying: Boolean) {
-                            playbackManager.isPlayingState.value = isPlaying
+                            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                                playbackManager.isPlayingState.value = isPlaying
 
-                            CoroutineScope(Dispatchers.Main).launch {
-                                while (isPlaying) {
-                                    val duration = exoPlayer.duration.toFloat()
-                                    val currentPosition = exoPlayer.currentPosition.toFloat()
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    while (isPlaying) {
+                                        val duration = exoPlayer.duration.toFloat()
+                                        val currentPosition = exoPlayer.currentPosition.toFloat()
 
-                                    playbackManager.currentMusicPosition.longValue = exoPlayer.currentPosition
-                                    playbackManager.currentMusicSeekBarPosition.floatValue = (currentPosition / duration).coerceIn(0.0f, 1.0f)
+                                        playbackManager.currentMusicPosition.longValue = exoPlayer.currentPosition
+                                        playbackManager.currentMusicSeekBarPosition.floatValue = (currentPosition / duration).coerceIn(0.0f, 1.0f)
 
-                                    delay(1000L)
+                                        delay(1000L)
+                                    }
                                 }
+
+                                super.onIsPlayingChanged(isPlaying)
+
                             }
 
-                            super.onIsPlayingChanged(isPlaying)
-
-                        }
-
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            super.onPlaybackStateChanged(playbackState)
-                            playbackManager.musicDuration.longValue = duration
-                        }
-                    })
+                            override fun onPlaybackStateChanged(playbackState: Int) {
+                                super.onPlaybackStateChanged(playbackState)
+                                playbackManager.musicDuration.longValue = duration
+                            }
+                        })
+                    }
                 }
             }
 

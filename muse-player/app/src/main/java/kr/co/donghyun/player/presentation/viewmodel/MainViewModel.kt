@@ -2,9 +2,7 @@ package kr.co.donghyun.player.presentation.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -21,9 +19,10 @@ import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.channel.model.Album
 import kr.co.donghyun.player.data.channel.model.ArtistPreview
 import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.extractor.model.FeatureResponse
 import kr.co.donghyun.player.domain.AlbumUseCase
 import kr.co.donghyun.player.domain.ChannelUseCase
-import kr.co.donghyun.player.domain.ExtractorUseCase
+import kr.co.donghyun.player.domain.FeatureUseCase
 import kr.co.donghyun.player.presentation.base.BaseViewModel
 import kr.co.donghyun.player.presentation.util.PlaybackManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -39,7 +38,7 @@ class MainViewModel @Inject constructor(
     val playbackManager: PlaybackManager,
     private val channelUseCase: ChannelUseCase,
     private val albumUseCase: AlbumUseCase,
-    private val extractorUseCase: ExtractorUseCase
+    private val featureUseCase: FeatureUseCase
 ) : BaseViewModel() {
     val searchedVideos = mutableStateListOf<VideoItem?>()
     val searchedArtists = mutableStateListOf<ArtistPreview?>()
@@ -55,11 +54,20 @@ class MainViewModel @Inject constructor(
         fetchMyPlaylist()
     }
 
+    fun fetchShortFeature(videoId : String, onSuccess : (FeatureResponse?) -> Unit) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                Log.d("TAG", "${featureUseCase.getFeature(videoId).body()}")
+                onSuccess(featureUseCase.getFeature(videoId).body())
+            }
+        }
+    }
+
     fun fetchShortsList() {
         viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    extractorUseCase.getShortFeatures(keyword = "데이먼스").body()?.videoIds ?: listOf()
+                    featureUseCase.getShortFeatures(keyword = "데이먼스").body()?.videoIds ?: listOf()
                 }
                 _shortsList.value = result // 데이터가 로드되면 상태 업데이트
             } catch (e: Exception) {
@@ -164,54 +172,4 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getYoutubeUrlById(cookie : File, videoId : String, onPreparedExoPlayer : (String) -> Unit, onError : () -> Unit) {
-        if(loadMediaCoroutineJob?.isActive == true) {
-            loadMediaCoroutineJob?.cancel()
-        }
-        loadMediaCoroutineJob = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val cookiesFile = cookie.asRequestBody("text/plain".toMediaTypeOrNull())
-                val multipartCookie = MultipartBody.Part.createFormData("cookie", cookie.name, cookiesFile)
-                val response = extractorUseCase.getExtractorUrl(multipartCookie, videoId)
-
-                if(response.isSuccessful) {
-                    val body = response.body()
-
-                    if (body != null) {
-                        withContext(Dispatchers.Main) {
-                            exoPlayer.run {
-                                val mediaItem = if(body.url != null) {
-                                    MediaItem.Builder()
-                                        .setUri(body.url.toUri())
-                                        .setMediaMetadata(
-                                            MediaMetadata.Builder()
-                                                .setTitle(body.title)
-                                                .setArtist(body.artist)
-                                                .build()
-                                        )
-                                        .build()
-                                } else null
-
-                                if(mediaItem != null) {
-                                    setMediaItem(mediaItem)
-                                    prepare()
-                                    onPreparedExoPlayer(body.url ?: "")
-                                }
-                            }
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                            onError()
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                        onError()
-                    }
-                }
-            }
-        }
-    }
 }

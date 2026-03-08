@@ -1,29 +1,18 @@
 package kr.co.donghyun.player.presentation.viewmodel
 
-import android.graphics.drawable.BitmapDrawable
-import android.util.Log
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.exoplayer.ExoPlayer
-import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.data.album.model.AlbumDetailResponse
-import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
-import kr.co.donghyun.player.data.util.Constants
 import kr.co.donghyun.player.domain.AlbumUseCase
-import kr.co.donghyun.player.domain.ExtractorUseCase
+import kr.co.donghyun.player.domain.FeatureUseCase
 import kr.co.donghyun.player.presentation.base.BaseViewModel
 import kr.co.donghyun.player.presentation.util.PlaybackManager
 import kr.co.donghyun.player.presentation.util.generateYoutubeUrl
@@ -31,7 +20,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,7 +27,7 @@ class AlbumViewModel @Inject constructor(
     val exoPlayer: ExoPlayer,
     val playbackManager: PlaybackManager,
     private val albumUseCase: AlbumUseCase,
-    private val extractorUseCase: ExtractorUseCase
+    private val featureUseCase: FeatureUseCase
 ): BaseViewModel() {
 
     val albumDetail = mutableStateOf<AlbumDetailResponse?>(null)
@@ -73,7 +61,7 @@ class AlbumViewModel @Inject constructor(
 
                     val cookiesFile = cookie.asRequestBody("text/plain".toMediaTypeOrNull())
                     val multipartCookie = MultipartBody.Part.createFormData("cookie", cookie.name, cookiesFile)
-                    extractorUseCase.uploadCookies(multipartCookie)
+                    featureUseCase.uploadCookies(multipartCookie)
 
                     val url = generateYoutubeUrl(videoId)
                     val mediaItem = MediaItem.Builder()

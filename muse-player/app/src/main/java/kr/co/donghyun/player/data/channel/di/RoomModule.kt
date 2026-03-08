@@ -9,8 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kr.co.donghyun.player.data.channel.dao.ChannelDao
 import kr.co.donghyun.player.data.channel.database.ChannelDatabase
-import kr.co.donghyun.player.data.extractor.dao.ExtractorDao
-import kr.co.donghyun.player.data.extractor.database.ExtractorDatabase
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)

@@ -8,7 +8,7 @@ import kr.co.donghyun.player.data.album.dao.MusicDao
 import kr.co.donghyun.player.data.album.database.converter.MusicConverter
 import kr.co.donghyun.player.data.album.model.VideoItem
 
-@Database(entities = [Music::class, VideoItem::class], version = 2)
+@Database(entities = [Music::class, VideoItem::class], version = 2, exportSchema = false)
 @TypeConverters(MusicConverter::class)
 abstract class MusicDatabase : RoomDatabase(){
     abstract fun musicDao(): MusicDao

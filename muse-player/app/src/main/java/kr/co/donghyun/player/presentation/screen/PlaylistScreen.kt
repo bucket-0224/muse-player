@@ -134,14 +134,10 @@ fun PlaylistScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, pl
                                                     context,
                                                     PlayerActivity::class.java
                                                 ).apply {
-                                                    putExtra(
-                                                        "isAnotherMusic",
-                                                        currentPlayingVideoId.value != videoId
-                                                    )
+                                                    putExtra("isNewPlaying", currentPlayingVideoId.value != videoId)
                                                     putExtra("videoId", videoId)
 
-                                                    currentMusicIndex.intValue =
-                                                        getFetchedPlaylist().indexOf(song)
+                                                    currentMusicIndex.intValue = getFetchedPlaylist().indexOf(song)
                                                     isClickable.value = true
                                                     isOnPlaylist.value = true
                                                     playingStateOfResponse.value = song

@@ -6,8 +6,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.album.model.VideoItem
-import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
-
 @Dao
 interface MusicDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -51,7 +51,9 @@ fun MinimumPlayingStateComponents(playbackManager: PlaybackManager, paddingValue
                 )
                 .height(72.dp)
                 .clickable {
-                    context.startActivity(Intent(context, PlayerActivity::class.java))
+                    context.startActivity(Intent(context, PlayerActivity::class.java).apply {
+                        putExtra("isNewPlaying", false)
+                    })
                 },
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.elevatedCardElevation(

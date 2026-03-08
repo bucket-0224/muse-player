@@ -27,11 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kr.co.donghyun.player.R
-import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
+import kr.co.donghyun.player.data.extractor.model.FeatureResponse
 import kr.co.donghyun.player.presentation.theme.PlayerTheme
 
 @Composable
-fun AlbumComponents(data : ExtractorResponseBody?) {
+fun AlbumComponents(data : FeatureResponse?) {
     PlayerTheme {
         Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.padding(bottom = 32.dp), elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)) {

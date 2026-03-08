@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kr.co.donghyun.player.data.channel.model.ArtistPreview
-import kr.co.donghyun.player.data.extractor.model.ExtractorResponseBody
 
 @Dao
 interface ChannelDao {

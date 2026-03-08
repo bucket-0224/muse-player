@@ -3,6 +3,7 @@ import youtube_dl, { Payload } from 'youtube-dl-exec';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import * as yt from 'youtube-info-streams';
 import { v4 as uuidv4 } from 'uuid';
 import YouTube from 'youtube-sr';
 import { promisify } from 'util';
@@ -246,32 +247,32 @@ async function getVideoFeaturesByVideoId(req: express.Request, res: express.Resp
     const { videoId } = req.query;
 
     if (!videoId) {
-        return res.status(400).json({ message: 'Missing cookie file or videoId' });
+        return res.status(400).json({ message: 'Missing videoId' });
     }
 
-    const videoGetByYoutubeWatchId: any = await youtube_dl(`https://www.youtube.com/watch?v=${videoId}`, {
-        dumpSingleJson: true,
-        noCheckCertificates: true,
-        noWarnings: true,
-        skipDownload: true,
-        preferFreeFormats: true,
-        addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
-    });
+    try {
+        // youtube-dl 대신 유튜브 공식 oEmbed API 호출 (속도 압도적)
+        const response = await fetch(
+            `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+        );
 
-    console.log(`video : ${JSON.stringify(videoGetByYoutubeWatchId)}`);
+        if (!response.ok) throw new Error('Video not found');
 
-    const urlList = videoGetByYoutubeWatchId['formats'].filter((item: any) => item['asr'] != undefined);
+        const data = await response.json();
 
-    console.log(`urlList : ${urlList}`);
+        console.log('response : ' + JSON.stringify(data));
 
-    return res.status(200).json({
-        title: videoGetByYoutubeWatchId['title'],
-        artist: videoGetByYoutubeWatchId['artist'] ?? videoGetByYoutubeWatchId['uploader'],
-        thumbnail: videoGetByYoutubeWatchId['thumbnail'],
-        videoId: videoId,
-        fullJson: videoGetByYoutubeWatchId,
-        message: 'youtube link generated.',
-    });
+        return res.status(200).json({
+            title: data.title,
+            artist: data.author_name, // oEmbed는 채널명을 author_name으로 줍니다.
+            thumbnail: data.thumbnail_url,
+            videoId: videoId,
+            message: 'Metadata fetched instantly.',
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Failed to fetch metadata' });
+    }
 }
 
 export default {

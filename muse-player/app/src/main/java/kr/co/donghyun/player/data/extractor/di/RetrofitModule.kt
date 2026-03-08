@@ -4,7 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kr.co.donghyun.player.data.extractor.network.ExtractorRemote
+import kr.co.donghyun.player.data.extractor.network.FeatureRemote
 import kr.co.donghyun.player.data.util.Constants.youtubeBaseUrl
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -21,11 +21,11 @@ object RetrofitModule {
         .build()
 
     @Provides
-    fun provideRemote() : ExtractorRemote {
+    fun provideRemote() : FeatureRemote {
         return Retrofit.Builder().baseUrl(youtubeBaseUrl)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
-            .create(ExtractorRemote::class.java)
+            .create(FeatureRemote::class.java)
     }
 }
