@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -106,42 +108,45 @@ fun ShortsScreen(viewModel: MainViewModel) {
         }
     }
 }
-
-@androidx.annotation.OptIn(UnstableApi::class)
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun VideoPlayer(videoUrl: String, isCurrentPage: Boolean) {
     val context = LocalContext.current
 
-    // ExoPlayer 초기화
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             repeatMode = Player.REPEAT_MODE_ONE // 무한 반복
-            setMediaItem(MediaItem.fromUri(videoUrl))
+            // 💡 백엔드에서 MP4를 주므로, M3U8 강제 지정을 제거하고 URL만 넘깁니다.
+            setMediaItem(
+                MediaItem.Builder()
+                    .setUri(videoUrl.toUri())
+                    .setMimeType(MimeTypes.APPLICATION_M3U8)
+                    .build()
+            )
             prepare()
         }
     }
 
-    // 페이지 변경 시 재생/정지 제어
+    // 💡 스와이프해서 현재 페이지가 되면 재생, 벗어나면 일시정지
     LaunchedEffect(isCurrentPage) {
         if (isCurrentPage) {
-            exoPlayer.playWhenReady = true
+            exoPlayer.play()
         } else {
             exoPlayer.pause()
+            // 원한다면 여기서 exoPlayer.seekTo(0)을 호출해 영상을 처음으로 되돌릴 수도 있습니다.
         }
     }
 
-    // 화면에서 사라질 때 리소스 해제
     DisposableEffect(Unit) {
         onDispose { exoPlayer.release() }
     }
 
-    // 영상을 꽉 채우는 AndroidView
     AndroidView(
         factory = {
             PlayerView(context).apply {
                 player = exoPlayer
-                useController = false // 기본 컨트롤러 숨김
-                // 핵심: 영상을 화면에 꽉 차게 확대 (Crop 스타일)
+                useController = false
+                // 💡 쇼츠/틱톡처럼 영상을 화면에 꽉 채우는 핵심 설정
                 layoutParams = FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT

@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.android.compose.wavy.slider)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.exoplayer.hls)
     implementation(libs.androidx.media3.ui)
 
     testImplementation(libs.junit)

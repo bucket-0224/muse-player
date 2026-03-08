@@ -73,7 +73,7 @@ async function getStreamShortFeaturesVideo(req: express.Request, res: express.Re
             // --get-url 옵션을 사용하여 오직 URL만 빠르게 추출합니다.
             const output = await youtubeDl(`https://www.youtube.com/watch?v=${videoId}`, {
                 getUrl: true,
-                format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                format: 'best[ext=mp4]/best',
                 noWarnings: true,
                 noCheckCertificates: true,
             });
@@ -102,32 +102,31 @@ async function getStreamShortFeaturesVideo(req: express.Request, res: express.Re
         };
 
         const proxyReq = https.request(options, (proxyRes) => {
-            // 403 발생 시 캐시 파괴 및 재시도 유도
             if (proxyRes.statusCode === 403) {
                 videoUrlCache.delete(videoId);
-                return res.status(410).json({ message: 'Link expired, please retry' });
+                return res.status(410).json({ message: 'Link expired' });
             }
 
-            // 필수 헤더 전달 (브라우저 플레이어 호환성)
-            res.status(proxyRes.statusCode || 200);
+            // [핵심] 206 Partial Content 대응 (스트리밍의 핵심)
+            // 클라이언트가 Range 요청을 보냈다면 206을 반환해야 합니다.
+            const statusCode = proxyRes.statusCode || 200;
+            res.status(statusCode);
 
-            const forwardHeaders = [
-                'content-type',
-                'content-length',
-                'content-range',
-                'accept-ranges',
-                'cache-control',
-            ];
+            // 헤더 복사 시 'transfer-encoding'은 제거 (Node.js가 알아서 처리하게 함)
+            Object.keys(proxyRes.headers).forEach((h) => {
+                const headerValue = proxyRes.headers[h];
 
-            forwardHeaders.forEach((h) => {
-                if (proxyRes.headers[h]) res.setHeader(h, proxyRes.headers[h]!);
+                // headerValue가 undefined가 아닐 때만 셋팅
+                if (h.toLowerCase() !== 'transfer-encoding' && headerValue !== undefined) {
+                    res.setHeader(h, headerValue);
+                }
             });
 
-            // iOS 및 모바일 브라우저 최적화 헤더
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('X-Content-Type-Options', 'nosniff');
+            // Content-Type 강제 지정 (MP4 스트리밍임을 명시)
+            if (!proxyRes.headers['content-type']) {
+                res.setHeader('Content-Type', 'video/mp4');
+            }
 
-            // 4️⃣ [효율적 파이핑]
             proxyRes.pipe(res);
         });
 
@@ -168,7 +167,8 @@ async function getStreamVideoFeaturesVideo(req: express.Request, res: express.Re
             // --get-url 옵션을 사용하여 오직 URL만 빠르게 추출합니다.
             const output = await youtubeDl(`https://www.youtube.com/watch?v=${videoId}`, {
                 getUrl: true,
-                format: 'bestaudio[ext=m4a]/bestaudio', // iOS 호환성을 위한 m4a 우선 순위
+                // [중요] mp4 포맷으로 고정해야 브라우저나 모바일 앱이 '파일 끝'을 안 기다리고 바로 재생합니다.
+                format: 'best[ext=mp4]/best',
                 noWarnings: true,
                 noCheckCertificates: true,
             });
@@ -197,32 +197,31 @@ async function getStreamVideoFeaturesVideo(req: express.Request, res: express.Re
         };
 
         const proxyReq = https.request(options, (proxyRes) => {
-            // 403 발생 시 캐시 파괴 및 재시도 유도
             if (proxyRes.statusCode === 403) {
                 videoUrlCache.delete(videoId);
-                return res.status(410).json({ message: 'Link expired, please retry' });
+                return res.status(410).json({ message: 'Link expired' });
             }
 
-            // 필수 헤더 전달 (브라우저 플레이어 호환성)
-            res.status(proxyRes.statusCode || 200);
+            // [핵심] 206 Partial Content 대응 (스트리밍의 핵심)
+            // 클라이언트가 Range 요청을 보냈다면 206을 반환해야 합니다.
+            const statusCode = proxyRes.statusCode || 200;
+            res.status(statusCode);
 
-            const forwardHeaders = [
-                'content-type',
-                'content-length',
-                'content-range',
-                'accept-ranges',
-                'cache-control',
-            ];
+            // 헤더 복사 시 'transfer-encoding'은 제거 (Node.js가 알아서 처리하게 함)
+            Object.keys(proxyRes.headers).forEach((h) => {
+                const headerValue = proxyRes.headers[h];
 
-            forwardHeaders.forEach((h) => {
-                if (proxyRes.headers[h]) res.setHeader(h, proxyRes.headers[h]!);
+                // headerValue가 undefined가 아닐 때만 셋팅
+                if (h.toLowerCase() !== 'transfer-encoding' && headerValue !== undefined) {
+                    res.setHeader(h, headerValue);
+                }
             });
 
-            // iOS 및 모바일 브라우저 최적화 헤더
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('X-Content-Type-Options', 'nosniff');
+            // Content-Type 강제 지정 (MP4 스트리밍임을 명시)
+            if (!proxyRes.headers['content-type']) {
+                res.setHeader('Content-Type', 'video/mp4');
+            }
 
-            // 4️⃣ [효율적 파이핑]
             proxyRes.pipe(res);
         });
 

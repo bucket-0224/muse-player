@@ -23,6 +23,7 @@ import kr.co.donghyun.player.domain.ExtractorUseCase
 import javax.inject.Inject
 import androidx.core.net.toUri
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import kotlinx.coroutines.Job
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.album.model.VideoItem
@@ -45,58 +46,23 @@ class PlayerViewModel @Inject constructor(
     val isExtracted = mutableStateOf(false)
     var loadMediaCoroutineJob : Job? = null
 
-    fun getYoutubeUrlById(cookie : File, videoId : String, onPreparedExoPlayer : (String) -> Unit, onError : () -> Unit) {
-        if(loadMediaCoroutineJob?.isActive == true) {
-            loadMediaCoroutineJob?.cancel()
-        }
+    fun extractMusicAndPlaying(videoId : String, videoUrl : String) {
+        isExtracted.value = true
 
-        loadMediaCoroutineJob = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val cookiesFile = cookie.asRequestBody("text/plain".toMediaTypeOrNull())
-                val multipartCookie = MultipartBody.Part.createFormData("cookie", cookie.name, cookiesFile)
-                val response = extractorUseCase.getExtractorUrl(multipartCookie, videoId)
+        exoPlayer.run {
+            val mediaItem = MediaItem.Builder()
+                .setMimeType(MimeTypes.APPLICATION_M3U8)
+                .setUri(videoUrl.toUri())
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle("test")
+                        .setArtist("artist")
+                        .build())
+                .build()
 
-                if(response.isSuccessful) {
-                    val body = response.body()
-
-                    if (body != null) {
-                        withContext(Dispatchers.Main) {
-                            isExtracted.value = true
-
-                            exoPlayer.run {
-                                val mediaItem = if(body.url != null) {
-                                    MediaItem.Builder()
-                                        .setUri(body.url.toUri())
-                                        .setMediaMetadata(
-                                            MediaMetadata.Builder()
-                                                .setTitle(body.title)
-                                                .setArtist(body.artist)
-                                                .build()
-                                        )
-                                        .build()
-                                } else null
-
-                                if(mediaItem != null) {
-                                    setMediaItem(mediaItem)
-                                    prepare()
-                                    playbackManager.setVideo(body.videoId, body.url ?: "")
-                                    onPreparedExoPlayer(body.url ?: "")
-                                }
-                            }
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                            onError()
-                        }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Log.d("TAG", "error : ${response.errorBody()?.string()}")
-                        onError()
-                    }
-                }
-            }
+            setMediaItem(mediaItem)
+            prepare()
+            playbackManager.setVideo(videoId, videoUrl)
         }
     }
 

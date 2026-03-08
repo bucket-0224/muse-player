@@ -12,6 +12,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.10.01"
 composeWavySlider = "0.0.4"
 media3Exoplayer = "1.4.1"
+media3ExoplayerHls = "1.9.2"
 media3Session = "1.7.1"
 okhttpBom = "4.11.0"
 retrofitVersion = "2.11.0"
@@ -26,6 +27,7 @@ media3Ui = "1.7.1"
 [libraries]
 accompanist-placeholder-material = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanistPlaceholderMaterial" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3ExoplayerHls" }
 androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "media3Session" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

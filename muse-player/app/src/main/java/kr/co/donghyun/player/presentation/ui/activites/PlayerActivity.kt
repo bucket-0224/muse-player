@@ -66,8 +66,8 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
             val isOnPlaylist = remember { playbackManager.isOnPlaylist }
 
             LaunchedEffect(rememberGetMusicDetail) {
+                extractMusicAndPlaying(videoId = intent.getStringExtra("videoId") ?: "", generateYoutubeUrl(intent.getStringExtra("videoId") ?: ""))
                 exoPlayer.run {
-
                     playWhenReady = true
 
                     val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
