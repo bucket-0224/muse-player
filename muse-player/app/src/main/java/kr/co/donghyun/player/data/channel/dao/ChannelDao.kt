@@ -4,16 +4,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
+import kr.co.donghyun.player.data.channel.model.SearchItem
 
 @Dao
 interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(artistPreview: ArtistPreview)
+    suspend fun insert(artistItem: SearchItem)
 
-    @Query("SELECT * FROM ArtistPreview")
-    suspend fun fetchAll(): List<ArtistPreview>
+    @Query("SELECT * FROM SearchItem")
+    suspend fun fetchAll(): List<SearchItem>
 
-    @Query("DELETE FROM ArtistPreview")
+    @Query("DELETE FROM SearchItem")
     suspend fun deleteAll()
 }

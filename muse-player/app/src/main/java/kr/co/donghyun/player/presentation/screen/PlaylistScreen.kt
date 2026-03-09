@@ -4,6 +4,7 @@ package kr.co.donghyun.player.presentation.screen
 
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +51,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.R
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.components.AlbumDetailComponents
 import kr.co.donghyun.player.presentation.components.PlaylistComponents
 import kr.co.donghyun.player.presentation.service.MusicPlayerService
@@ -65,7 +66,7 @@ import java.io.File
 
 @OptIn(UnstableApi::class)
 @Composable
-fun PlaylistScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playingType : String, onResult : () -> Unit) -> Unit, innerPadding : PaddingValues) {
+fun PlaylistScreen(viewModel: MainViewModel, innerPadding : PaddingValues) {
     with(viewModel) {
         with(playbackManager) {
             val context = LocalContext.current
@@ -125,24 +126,25 @@ fun PlaylistScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, pl
                                     if (isClickable.value) {
                                         isClickable.value = false
                                         val videoId =
-                                            if (song is Music?) song.youtubeId else if (song is VideoItem?) song.id else ""
+                                            if (song is Music?) song.youtubeId else if (song is SearchItem?) song.id else ""
+
+                                        Log.d("TAG", "videoId : $videoId, ${currentPlayingVideoId.value}, ${currentPlayingVideoId.value != videoId}")
 
                                         playingStateOfResponse.value = song
-                                        onPlayMusic(videoId, "") {
-                                            context.startActivity(
-                                                Intent(
-                                                    context,
-                                                    PlayerActivity::class.java
-                                                ).apply {
-                                                    putExtra("isNewPlaying", currentPlayingVideoId.value != videoId)
-                                                    putExtra("videoId", videoId)
 
-                                                    currentMusicIndex.intValue = getFetchedPlaylist().indexOf(song)
-                                                    isClickable.value = true
-                                                    isOnPlaylist.value = true
-                                                    playingStateOfResponse.value = song
-                                                })
-                                        }
+                                        context.startActivity(
+                                            Intent(
+                                                context,
+                                                PlayerActivity::class.java
+                                            ).apply {
+                                                putExtra("isNewPlaying", currentPlayingVideoId.value != videoId)
+                                                putExtra("videoId", videoId)
+
+                                                currentMusicIndex.intValue = getFetchedPlaylist().indexOf(song)
+                                                isClickable.value = true
+                                                isOnPlaylist.value = true
+                                                playingStateOfResponse.value = song
+                                            })
                                     }
                                 })
                                 Spacer(modifier = Modifier.height(16.dp))

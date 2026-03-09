@@ -3,8 +3,8 @@ package kr.co.donghyun.player.data.album.repository
 import kr.co.donghyun.player.data.album.dao.MusicDao
 import kr.co.donghyun.player.data.album.model.AlbumDetailResponse
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
 import kr.co.donghyun.player.data.album.network.AlbumRemote
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -17,11 +17,11 @@ class SimpleAlbumRepository @Inject constructor(val remote : AlbumRemote, val mu
         return musicDao.insert(music)
     }
 
-    override suspend fun insertVideo(video: VideoItem) {
+    override suspend fun insertVideo(video: SearchItem) {
         return musicDao.insert(video)
     }
 
-    override suspend fun fetchAllVideos(): List<VideoItem> {
+    override suspend fun fetchAllVideos(): List<SearchItem> {
         return musicDao.fetchAllVideos()
     }
 

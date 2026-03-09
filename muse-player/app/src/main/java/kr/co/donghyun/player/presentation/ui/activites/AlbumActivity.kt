@@ -32,7 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.donghyun.player.R
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.base.BaseComponentActivity
 import kr.co.donghyun.player.presentation.screen.AlbumDetailScreen
 import kr.co.donghyun.player.presentation.service.MusicPlayerService
@@ -72,7 +72,7 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
                                     setUpFetchedMusicVideoList(currentAlbum.value?.musics ?: listOf(), index)
                                 }
                                 putExtra("channelId", intent.getStringExtra("channelId") ?: "")
-                                putExtra("isAnotherMusic", song.youtubeId != if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.youtubeId else (playingStateOfResponse.value as VideoItem?)?.id)
+                                putExtra("isAnotherMusic", song.youtubeId != if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.youtubeId else (playingStateOfResponse.value as SearchItem?)?.id)
                                 putExtra("videoId", song.youtubeId)
                             })
                             isClickable.value = true
@@ -114,7 +114,7 @@ class AlbumActivity : BaseComponentActivity<AlbumViewModel>() {
                                 action = "ACTION_PLAY"
                                 putExtra("videoId", intent.getStringExtra("videoId"))
                                 putExtra("playingType", playingType)
-                                putExtra("imageUrl", if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.thumbnailUrl else (playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
+                                putExtra("imageUrl", if(playingStateOfResponse.value is Music?) (playingStateOfResponse.value as Music?)?.thumbnailUrl else (playingStateOfResponse.value as SearchItem?)?.thumbnailUrl)
                             }
                             ContextCompat.startForegroundService(this@AlbumActivity, intent)
 

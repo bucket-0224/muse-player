@@ -17,8 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.data.album.model.Music
 import kr.co.donghyun.player.data.channel.model.Album
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.data.extractor.model.FeatureResponse
 import kr.co.donghyun.player.domain.AlbumUseCase
 import kr.co.donghyun.player.domain.ChannelUseCase
@@ -40,9 +39,8 @@ class MainViewModel @Inject constructor(
     private val albumUseCase: AlbumUseCase,
     private val featureUseCase: FeatureUseCase
 ) : BaseViewModel() {
-    val searchedVideos = mutableStateListOf<VideoItem?>()
-    val searchedArtists = mutableStateListOf<ArtistPreview?>()
-    val recentlySearchedArtists = mutableStateListOf<ArtistPreview?>()
+    val searchedVideosByQuery = mutableStateListOf<SearchItem>()
+    val recentlySearchedArtists = mutableStateListOf<SearchItem>()
     val recentlySearchedArtistsAlbums = mutableStateListOf<List<Album>>()
     private val _shortsList = MutableStateFlow<List<String>>(emptyList())
     val shortsList: StateFlow<List<String>> = _shortsList.asStateFlow()
@@ -85,10 +83,10 @@ class MainViewModel @Inject constructor(
                         addAll(albumUseCase.fetchAllVideos())
                     })
                     sortWith(Comparator<Any> { a, b ->
-                        val comparatorInsertedAt = if(a is Music?) a.insertedAt else if(a is VideoItem?) a.insertedAt else Date()
-                        val comparatorTargetInsertedAt = if(b is Music?) b.insertedAt else if(b is VideoItem?) b.insertedAt else Date()
+                        val comparatorInsertedAt = if(a is Music?) a.insertedAt else if(a is SearchItem?) a.insertedAt else Date()
+                        val comparatorTargetInsertedAt = if(b is Music?) b.insertedAt else if(b is SearchItem?) b.insertedAt else Date()
 
-                        comparatorInsertedAt.compareTo(comparatorTargetInsertedAt)
+                        comparatorInsertedAt!!.compareTo(comparatorTargetInsertedAt)
                     })
                     reverse()
                     onRefreshed()
@@ -99,7 +97,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun insertSearchedArtist(artistPreview: ArtistPreview?) {
+    fun insertSearchedArtist(artistPreview: SearchItem?) {
         if(artistPreview != null) {
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
@@ -117,7 +115,7 @@ class MainViewModel @Inject constructor(
             val artists = channelUseCase.fetchAllSearchedArtists()
 
             artists.forEach { artist ->
-                val response = channelUseCase.getChannelInfo(artist.artistId)
+                val response = channelUseCase.getChannelInfo(artist.id)
 
                 recentlySearchedArtistsAlbums.add(response.body()?.artist?.singles.orEmpty().toMutableList().apply {
                     addAll(response.body()?.artist?.albums.orEmpty())
@@ -127,29 +125,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun searchVideos(query : String) {
-        if(searchCoroutineJob?.isActive == true) {
-            searchCoroutineJob?.cancel()
-        }
-        searchCoroutineJob = viewModelScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    channelUseCase.searchVideos(query)
-                }
-
-                if(response.isSuccessful) {
-                    searchedVideos.run {
-                        clear()
-                        addAll(response.body()?.videos?.toList() ?: listOf())
-                    }
-                }
-            }catch (ex : Exception) {
-                ex.printStackTrace()
-            }
-        }
-    }
-
-    fun searchChannel(query : String) {
+    fun searchVideosByQuery(query : String) {
         if(searchCoroutineJob?.isActive == true) {
             searchCoroutineJob?.cancel()
         }
@@ -157,13 +133,13 @@ class MainViewModel @Inject constructor(
         searchCoroutineJob = viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    channelUseCase.searchChannel(query)
+                    channelUseCase.searchVideosByQuery(query)
                 }
 
                 if(response.isSuccessful) {
-                    searchedArtists.run {
+                    searchedVideosByQuery.run {
                         clear()
-                        addAll(response.body()?.artist?.toList() ?: listOf())
+                        addAll(response.body()?.items?.toList() ?: listOf())
                     }
                 }
             }catch (ex : Exception) {

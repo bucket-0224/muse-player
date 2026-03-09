@@ -31,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kr.co.donghyun.player.data.channel.model.Album
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.ui.activites.AlbumActivity
 
 @Composable
-fun RecentSearchedArtistComponents(onClick : (String) -> Unit, artist : ArtistPreview?, albums : List<Album>) {
-    Column(modifier = Modifier.clickable { onClick(artist?.artistId ?: "") }) {
+fun RecentSearchedArtistComponents(onClick : (String) -> Unit, artist : SearchItem?, albums : List<Album>) {
+    Column(modifier = Modifier.clickable { onClick(artist?.id ?: "") }) {
         Row(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start) {
             Card(
                 shape = RoundedCornerShape(99.dp),
@@ -52,7 +52,7 @@ fun RecentSearchedArtistComponents(onClick : (String) -> Unit, artist : ArtistPr
             Column(modifier = Modifier
                 .weight(1f)
                 .padding(start = 16.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                Text(text = artist?.name ?: "", fontSize = 18.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
+                Text(text = artist?.artist ?: "", fontSize = 18.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
                 Text(text = "${artist?.subscribers}", fontSize = 14.sp)
             }
         }

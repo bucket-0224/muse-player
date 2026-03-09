@@ -62,7 +62,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
-import kr.co.donghyun.player.data.album.model.VideoItem
 import kr.co.donghyun.player.presentation.base.BaseComponentActivity
 import kr.co.donghyun.player.presentation.components.ArtistDetailComponents
 import kr.co.donghyun.player.presentation.components.MinimumPlayingStateComponents
@@ -195,14 +194,7 @@ class MainActivity : BaseComponentActivity<MainViewModel>() {
                     }
 
                     1 -> {
-                        PlaylistScreen(viewModel = this, onPlayMusic = { videoId, playingType, successCallback ->
-                            if(videoId != currentVideoId) {
-                                playbackManager.setVideo(videoId, generateYoutubeUrl(videoId))
-                                successCallback()
-                            } else {
-                                successCallback()
-                            }
-                        }, innerPadding)
+                        PlaylistScreen(viewModel = this, innerPadding)
                     }
 
                     2 -> {

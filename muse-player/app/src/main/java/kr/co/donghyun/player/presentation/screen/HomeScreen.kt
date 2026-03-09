@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.co.donghyun.player.R
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.components.ArtistDetailComponents
 import kr.co.donghyun.player.presentation.components.RecentSearchedArtistComponents
 import kr.co.donghyun.player.presentation.components.VideoDetailComponents
@@ -53,11 +53,8 @@ import kr.co.donghyun.player.presentation.viewmodel.MainViewModel
 fun HomeScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playingType : String, onResult : () -> Unit) -> Unit,  innerPadding : PaddingValues) {
     with(viewModel) {
         val context = LocalContext.current
-        val searchedArtists = remember { searchedArtists }
-        val searchedVideos = remember { searchedVideos }
+        val searchedVideosByQuery = remember { searchedVideosByQuery }
         val isClickable = remember { mutableStateOf(true) }
-
-        var searchType = remember { mutableStateOf(Util.SEARCH.ARTIST) }
 
         val modalBottomSheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
@@ -196,18 +193,9 @@ fun HomeScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playin
                     ) {
                         Column {
                             Text(text = "검색", fontWeight = FontWeight(700), fontSize = 18.sp)
-                            Text(text = "${if(searchType.value == Util.SEARCH.ARTIST) "유튜브 아티스트를" else "유튜브 영상을"} 검색하세요.", modifier = Modifier.padding(bottom = 8.dp))
+                            Text(text = "영상을 검색하세요.", modifier = Modifier.padding(bottom = 8.dp))
                         }
                         Spacer(modifier = Modifier.weight(1f))
-                        OutlinedButton(onClick = {
-                            inputTextState = ""
-                            searchType.value = if(searchType.value == Util.SEARCH.ARTIST)
-                                Util.SEARCH.VIDEO
-                            else
-                                Util.SEARCH.ARTIST
-                        }) {
-                            Text(text = if(searchType.value == Util.SEARCH.ARTIST) "영상 검색" else "아티스트 검색" , fontSize = 14.sp)
-                        }
                     }
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         OutlinedTextField(
@@ -225,10 +213,7 @@ fun HomeScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playin
                             maxLines = 1,
                             onValueChange = {
                                 inputTextState = it
-                                if(searchType.value == Util.SEARCH.ARTIST)
-                                    searchChannel(inputTextState)
-                                else
-                                    searchVideos(inputTextState)
+                                searchVideosByQuery(it)
                             },
                             placeholder = {
                                 Text("검색어를 입력하세요.")
@@ -244,53 +229,44 @@ fun HomeScreen(viewModel: MainViewModel, onPlayMusic : (videoId : String, playin
 //                            )
                         )
                     }
-                    if(searchType.value == Util.SEARCH.ARTIST) {
-                        if(searchedArtists.isNotEmpty()) {
-                            LazyColumn {
-                                items(searchedArtists) { artist ->
-                                    ArtistDetailComponents(artist = artist) {
-                                        showBottomSheet = false
-                                        insertSearchedArtist(artist)
-                                        context.startActivity(Intent(context, SearchArtistActivity::class.java).apply {
-                                            putExtra("channelId", artist?.artistId.orEmpty())
-                                        })
-                                    }
-                                }
-                                item {
-                                    Spacer(modifier = Modifier.padding(bottom = 16.dp))
-                                }
-                            }
-                        }
-                    } else {
-                        if(searchedVideos.isNotEmpty()) {
-                            LazyColumn {
-                                items(searchedVideos) { video ->
-                                    VideoDetailComponents(video = video) {
-                                        with(playbackManager) {
-                                            if(isClickable.value) {
-                                                onPlayMusic(video?.id ?: "", Util.SEARCH.VIDEO.name) {
-                                                    isClickable.value = false
-                                                    context.startActivity(Intent(context, PlayerActivity::class.java).apply {
-                                                        putExtra("videoId", video?.id)
-                                                        putExtra("isNewPlaying", video?.id != if(playingStateOfResponse.value is VideoItem?) (playingStateOfResponse.value as VideoItem?)?.id else (playingStateOfResponse.value as Music?)?.youtubeId)
-                                                        putExtra("playingType", Util.SEARCH.VIDEO.name)
 
-                                                        playbackManager.setUpFetchedMusicVideoList(searchedVideos.toList(), searchedVideos.indexOf(video))
 
-                                                        showBottomSheet = false
-                                                        isClickable.value = true
-                                                        isOnPlaylist.value = false
-                                                        playingStateOfResponse.value = video
-                                                    })
-                                                }
+                    LazyColumn {
+                        items(searchedVideosByQuery) { queriedItem ->
+                            if(queriedItem.type == Util.SEARCH.ARTIST.name) {
+                                ArtistDetailComponents(artist = queriedItem) {
+                                    showBottomSheet = false
+                                    insertSearchedArtist(queriedItem)
+                                    context.startActivity(Intent(context, SearchArtistActivity::class.java).apply {
+                                        putExtra("channelId", queriedItem.id)
+                                    })
+                                }
+                            } else {
+                                VideoDetailComponents(video = queriedItem) {
+                                    with(playbackManager) {
+                                        if(isClickable.value) {
+                                            onPlayMusic(queriedItem.id, Util.SEARCH.VIDEO.name) {
+                                                isClickable.value = false
+                                                context.startActivity(Intent(context, PlayerActivity::class.java).apply {
+                                                    putExtra("videoId", queriedItem.id)
+                                                    putExtra("isNewPlaying", queriedItem.id != if(playingStateOfResponse.value is SearchItem?) (playingStateOfResponse.value as SearchItem?)?.id else (playingStateOfResponse.value as Music?)?.youtubeId)
+                                                    putExtra("playingType", Util.SEARCH.VIDEO.name)
+
+                                                    playbackManager.setUpFetchedMusicVideoList(searchedVideosByQuery.map { item -> item.type == Util.SEARCH.VIDEO.name }.toList(), searchedVideosByQuery.indexOf(queriedItem))
+
+                                                    showBottomSheet = false
+                                                    isClickable.value = true
+                                                    isOnPlaylist.value = false
+                                                    playingStateOfResponse.value = queriedItem
+                                                })
                                             }
                                         }
                                     }
                                 }
-                                item {
-                                    Spacer(modifier = Modifier.padding(bottom = 16.dp))
-                                }
                             }
+                        }
+                        item {
+                            Spacer(modifier = Modifier.padding(bottom = 16.dp))
                         }
                     }
                 }

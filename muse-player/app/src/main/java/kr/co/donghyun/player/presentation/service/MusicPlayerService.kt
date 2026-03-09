@@ -21,7 +21,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import dagger.hilt.android.AndroidEntryPoint
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.ui.activites.MainActivity
 import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.PlaybackManager
@@ -69,8 +69,8 @@ class MusicPlayerService : Service() {
                 with(playbackManager) {
                     val imageUrl = if(playingStateOfResponse.value is Music?) {
                         (playingStateOfResponse.value as Music?)?.thumbnailUrl
-                    } else if(playingStateOfResponse.value is VideoItem?) {
-                        (playingStateOfResponse.value as VideoItem?)?.thumbnail?.url
+                    } else if(playingStateOfResponse.value is SearchItem?) {
+                        (playingStateOfResponse.value as SearchItem?)?.thumbnailUrl
                     } else ""
 
                     setAlbumCover(imageUrl)

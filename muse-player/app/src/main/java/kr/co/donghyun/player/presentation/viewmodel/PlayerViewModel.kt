@@ -16,7 +16,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import kotlinx.coroutines.Job
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.domain.AlbumUseCase
 import kr.co.donghyun.player.presentation.base.BaseViewModel
 import kr.co.donghyun.player.presentation.util.PlaybackManager
@@ -68,7 +68,7 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun insertToPlaylist(videoItem : VideoItem?, onInsertedCallback : () -> Unit) {
+    fun insertToPlaylist(videoItem : SearchItem?, onInsertedCallback : () -> Unit) {
         if(videoItem != null) {
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {

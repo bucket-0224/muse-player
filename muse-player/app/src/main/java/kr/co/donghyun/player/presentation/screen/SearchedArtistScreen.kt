@@ -155,55 +155,56 @@ fun SearchedArtistScreen(viewModel : SearchArtistViewModel, innerPadding : Paddi
             }
         }
 
-        if(showBottomSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                modifier = Modifier.padding(top = 64.dp),
-                sheetState = modalBottomSheetState
-            ) {
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp), verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.Start) {
-                    Text(text = "검색", fontWeight = FontWeight(700), fontSize = 18.sp)
-                    Text(text = "유튜브 채널명을 입력하세요.", modifier = Modifier.padding(bottom = 16.dp))
-                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                        OutlinedTextField(
-                            modifier = Modifier
-                                .padding(bottom = 16.dp)
-                                .fillMaxWidth(),
-                            value = inputTextState,
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Filled.Search,
-                                    contentDescription = "Search Icon"
-                                )
-                            },
-                            singleLine = true,
-                            maxLines = 1,
-                            onValueChange = {
-                                inputTextState = it
-                                searchChannel(it)
-                            },
-                        )
-                    }
-                    if(searchedArtists.isNotEmpty()) {
-                        LazyColumn {
-                            items(searchedArtists) { artist ->
-                                ArtistDetailComponents(artist = artist) {
-                                    showBottomSheet = false
-                                    insertSearchedArtist(artist)
-                                    getChannelInfo(artist?.artistId.orEmpty())
-                                }
-                            }
-                            item {
-                                Spacer(modifier = Modifier.padding(bottom = 16.dp))
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        if(showBottomSheet) {
+//            ModalBottomSheet(
+//                onDismissRequest = {
+//                    showBottomSheet = false
+//                },
+//                modifier = Modifier.padding(top = 64.dp),
+//                sheetState = modalBottomSheetState
+//            ) {
+//                Column(modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp), verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.Start) {
+//                    Text(text = "검색", fontWeight = FontWeight(700), fontSize = 18.sp)
+//                    Text(text = "유튜브 채널명을 입력하세요.", modifier = Modifier.padding(bottom = 16.dp))
+//                    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+//                        OutlinedTextField(
+//                            modifier = Modifier
+//                                .padding(bottom = 16.dp)
+//                                .fillMaxWidth(),
+//                            value = inputTextState,
+//                            leadingIcon = {
+//                                Icon(
+//                                    Icons.Filled.Search,
+//                                    contentDescription = "Search Icon"
+//                                )
+//                            },
+//                            singleLine = true,
+//                            maxLines = 1,
+//                            onValueChange = {
+//                                inputTextState = it
+//                                searchChannel(it)
+//                            },
+//                        )
+//                    }
+//
+//                    if(searchedArtists.isNotEmpty()) {
+//                        LazyColumn {
+//                            items(searchedArtists) { artist ->
+//                                ArtistDetailComponents(artist = artist) {
+//                                    showBottomSheet = false
+//                                    insertSearchedArtist(artist)
+//                                    getChannelInfo(artist?.artistId.orEmpty())
+//                                }
+//                            }
+//                            item {
+//                                Spacer(modifier = Modifier.padding(bottom = 16.dp))
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 }

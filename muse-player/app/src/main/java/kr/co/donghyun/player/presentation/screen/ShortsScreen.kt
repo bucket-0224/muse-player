@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -118,8 +120,7 @@ private fun VideoPlayer(videoUrl: String, isCurrentPage: Boolean) {
 
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
-            repeatMode = Player.REPEAT_MODE_ONE // 무한 반복
-            // 💡 백엔드에서 MP4를 주므로, M3U8 강제 지정을 제거하고 URL만 넘깁니다.
+            repeatMode = Player.REPEAT_MODE_ONE
             setMediaItem(
                 MediaItem.Builder()
                     .setUri(videoUrl.toUri())
@@ -130,13 +131,11 @@ private fun VideoPlayer(videoUrl: String, isCurrentPage: Boolean) {
         }
     }
 
-    // 💡 스와이프해서 현재 페이지가 되면 재생, 벗어나면 일시정지
     LaunchedEffect(isCurrentPage) {
         if (isCurrentPage) {
             exoPlayer.play()
         } else {
             exoPlayer.pause()
-            // 원한다면 여기서 exoPlayer.seekTo(0)을 호출해 영상을 처음으로 되돌릴 수도 있습니다.
         }
     }
 
@@ -144,19 +143,33 @@ private fun VideoPlayer(videoUrl: String, isCurrentPage: Boolean) {
         onDispose { exoPlayer.release() }
     }
 
+    // 💡 [핵심] 물결(Ripple) 효과를 없애기 위한 설정
+    val interactionSource = remember { MutableInteractionSource() }
+
     AndroidView(
         factory = {
             PlayerView(context).apply {
                 player = exoPlayer
                 useController = false
-                // 💡 쇼츠/틱톡처럼 영상을 화면에 꽉 채우는 핵심 설정
                 layoutParams = FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
             }
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            // 💡 화면 클릭 시 재생/일시정지 토글 기능 추가
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null // 화면 터치 시 회색 물결 번쩍임 제거 (쇼츠 UI 필수)
+            ) {
+                if (exoPlayer.isPlaying) {
+                    exoPlayer.pause()
+                } else {
+                    exoPlayer.play()
+                }
+            }
     )
 }
 

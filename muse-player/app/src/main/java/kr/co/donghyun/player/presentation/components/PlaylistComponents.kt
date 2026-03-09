@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kr.co.donghyun.player.data.album.model.Artist
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 
 
 @Composable
@@ -47,13 +47,13 @@ fun PlaylistComponents(albumSong : Any?, onClick: () -> Unit) {
                     defaultElevation = 8.dp
                 )
             ) {
-                AsyncImage(model = if(albumSong is Music?) albumSong?.thumbnailUrl.orEmpty() else if(albumSong is VideoItem?) albumSong.thumbnail.url else "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
+                AsyncImage(model = if(albumSong is Music?) albumSong?.thumbnailUrl.orEmpty() else if(albumSong is SearchItem?) albumSong.thumbnailUrl else "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
             }
             Column(modifier = Modifier
                 .weight(1f)
                 .padding(start = 16.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                Text(text = if(albumSong is Music?) albumSong?.title.orEmpty() else if(albumSong is VideoItem?) albumSong.title else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 18.sp, maxLines = 1)
-                Text(text = "${if(albumSong is Music?) albumSong?.artists?.first()?.name.orEmpty() else if(albumSong is VideoItem?) albumSong.channel.name else ""}, ${if(albumSong is Music?) albumSong?.duration?.label else if(albumSong is VideoItem?) albumSong.durationFormatted else ""}", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 14.sp)
+                Text(text = if(albumSong is Music?) albumSong?.title.orEmpty() else if(albumSong is SearchItem?) albumSong.title else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 18.sp, maxLines = 1)
+                Text(text = "${if(albumSong is Music?) albumSong?.artists?.first()?.name.orEmpty() else if(albumSong is SearchItem?) albumSong.artist else ""}, ${if(albumSong is Music?) albumSong?.duration?.label else if(albumSong is SearchItem?) albumSong.durationFormatted else ""}", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 14.sp)
             }
         }
     }

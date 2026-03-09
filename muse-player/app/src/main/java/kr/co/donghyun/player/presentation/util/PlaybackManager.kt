@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kr.co.donghyun.player.data.album.model.VideoItem
 import javax.inject.Inject
 import javax.inject.Singleton
 

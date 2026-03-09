@@ -1,9 +1,8 @@
 package kr.co.donghyun.player.data.channel.network
 
 import kr.co.donghyun.player.data.channel.model.ChannelDataResponse
-import kr.co.donghyun.player.data.channel.model.SearchChannelRequest
-import kr.co.donghyun.player.data.channel.model.SearchChannelResponse
-import kr.co.donghyun.player.data.album.model.SearchVideoResponse
+import kr.co.donghyun.player.data.channel.model.SearchItem
+import kr.co.donghyun.player.data.channel.model.SearchResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -16,13 +15,8 @@ interface ChannelRemote {
         @Query("channelId") channelId : String
     ) : Response<ChannelDataResponse>
 
-    @POST("channel/search-channel")
-    suspend fun searchChannel(
-        @Body searchChannelRequest : SearchChannelRequest
-    ) : Response<SearchChannelResponse>
-
-    @GET("videos/search")
-    suspend fun searchVideos(
+    @GET("channel/search")
+    suspend fun searchVideosByQuery(
         @Query("searchQuery") query : String
-    ) : Response<SearchVideoResponse>
+    ) : Response<SearchResponse>
 }

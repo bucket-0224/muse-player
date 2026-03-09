@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.co.donghyun.player.data.channel.model.Album
 import kr.co.donghyun.player.data.channel.model.Artist
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.domain.ChannelUseCase
 import kr.co.donghyun.player.presentation.base.BaseViewModel
 import kr.co.donghyun.player.presentation.util.PlaybackManager
@@ -27,28 +27,8 @@ class SearchArtistViewModel @Inject constructor(
     val singles = mutableStateListOf<Album?>()
     val albums = mutableStateListOf<Album?>()
 
-    val searchedArtists = mutableStateListOf<ArtistPreview?>()
 
-    fun searchChannel(query : String) {
-        viewModelScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) {
-                    channelUseCase.searchChannel(query)
-                }
-
-                if(response.isSuccessful) {
-                    searchedArtists.run {
-                        clear()
-                        addAll(response.body()?.artist?.toList() ?: listOf())
-                    }
-                }
-            }catch (ex : Exception) {
-                ex.printStackTrace()
-            }
-        }
-    }
-
-    fun insertSearchedArtist(artistPreview: ArtistPreview?) {
+    fun insertSearchedArtist(artistPreview: SearchItem?) {
         if(artistPreview != null) {
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {

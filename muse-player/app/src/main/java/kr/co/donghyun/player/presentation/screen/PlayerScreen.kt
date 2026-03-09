@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
 import kr.co.donghyun.player.presentation.components.ControllerComponents
 import kr.co.donghyun.player.presentation.components.PlayerComponents
 import kr.co.donghyun.player.presentation.theme.PlayerTheme
@@ -61,6 +60,7 @@ import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.Util
 import kr.co.donghyun.player.presentation.viewmodel.PlayerViewModel
 import androidx.core.net.toUri
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.ui.activites.SearchArtistActivity
 import java.io.File
 import java.text.SimpleDateFormat
@@ -120,7 +120,7 @@ fun PlayerScreen(
                                                     Toast.makeText(context, "플레이리스트에 해당 앨범이 추가되었습니다.", Toast.LENGTH_LONG).show()
                                                 }
                                             } else {
-                                                viewModel.insertToPlaylist(viewModel.playbackManager.playingStateOfResponse.value as VideoItem?) {
+                                                viewModel.insertToPlaylist(viewModel.playbackManager.playingStateOfResponse.value as SearchItem?) {
                                                     Toast.makeText(context, "플레이리스트에 해당 앨범이 추가되었습니다.", Toast.LENGTH_LONG).show()
                                                 }
                                             }
@@ -146,7 +146,7 @@ fun PlayerScreen(
                                                 setTitle("음악 다운로드")
                                                 setDescription("음악을 다운로드 중입니다..")
                                                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                                                setDestinationUri(Uri.fromFile(File(museFolder, "${if(data is Music?) data?.title else if(data is VideoItem?) data.title else "${SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())}"}.mp3")))
+                                                setDestinationUri(Uri.fromFile(File(museFolder, "${if(data is Music?) data?.title else if(data is SearchItem?) data.title else "${SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())}"}.mp3")))
                                                 setAllowedOverMetered(true)
                                             }
 
@@ -170,19 +170,19 @@ fun PlayerScreen(
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .padding(32.dp), elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)) {
-                        AsyncImage(modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, model = if(data is Music?) data?.thumbnailUrl else if(data is VideoItem?) data.thumbnail.url else "", contentDescription = "Album Cover")
+                        AsyncImage(modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, model = if(data is Music?) data?.thumbnailUrl else if(data is SearchItem?) data.thumbnailUrl else "", contentDescription = "Album Cover")
                     }
                     Spacer(modifier = Modifier.weight(4f))
                     Column(modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp, start = 32.dp, end = 32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.Start) {
-                        Text(text = if(data is Music?) data?.title.orEmpty() else if(data is VideoItem?) data.title else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, fontWeight = FontWeight(900), color = Color.White, fontSize = 24.sp)
+                        Text(text = if(data is Music?) data?.title.orEmpty() else if(data is SearchItem?) data.title else "", modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, fontWeight = FontWeight(900), color = Color.White, fontSize = 24.sp)
 
                         Text(
                             text = if(data is Music?)
                                 data?.artists?.first()?.name.orEmpty()
-                            else if(data is VideoItem?)
-                                data.channel.name
+                            else if(data is SearchItem?)
+                                data.artist ?: ""
                             else "",
                             modifier = Modifier.basicMarquee().clickable {
                                 context.startActivity(Intent(context, SearchArtistActivity::class.java).apply {

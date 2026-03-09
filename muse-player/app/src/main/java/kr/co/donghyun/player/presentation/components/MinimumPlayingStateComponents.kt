@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.ui.activites.PlayerActivity
 import kr.co.donghyun.player.presentation.util.PlaybackManager
 
@@ -68,12 +68,12 @@ fun MinimumPlayingStateComponents(playbackManager: PlaybackManager, paddingValue
                     Card(modifier = Modifier
                         .size(56.dp)
                     ) {
-                        AsyncImage(model = if(playingMusic is Music?) playingMusic.thumbnailUrl else if(playingMusic is VideoItem?) playingMusic.thumbnail.url else "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
+                        AsyncImage(model = if(playingMusic is Music?) playingMusic.thumbnailUrl else if(playingMusic is SearchItem?) playingMusic.thumbnailUrl else "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
                     }
                     Spacer(modifier = Modifier.padding(end = 8.dp))
                     Column {
-                        Text(text = if(playingMusic is Music?) playingMusic.title ?: "" else if(playingMusic is VideoItem?) playingMusic.title else "", color = Color.White, modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 16.sp, maxLines = 1, fontWeight = FontWeight(600))
-                        Text(text = if(playingMusic is Music?) playingMusic.artists.first().name ?: "" else if(playingMusic is VideoItem?) playingMusic.channel.name else "", color = Color.White, modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, fontSize = 12.sp)
+                        Text(text = if(playingMusic is Music?) playingMusic.title ?: "" else if(playingMusic is SearchItem?) playingMusic.title else "", color = Color.White, modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, fontSize = 16.sp, maxLines = 1, fontWeight = FontWeight(600))
+                        Text(text = if(playingMusic is Music?) playingMusic.artists.first().name ?: "" else if(playingMusic is SearchItem?) playingMusic.artist ?: "" else "", color = Color.White, modifier = Modifier.basicMarquee(), overflow = TextOverflow.Ellipsis, maxLines = 1, fontSize = 12.sp)
                     }
                 }
                 Box(

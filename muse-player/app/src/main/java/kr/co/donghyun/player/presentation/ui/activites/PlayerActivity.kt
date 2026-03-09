@@ -25,7 +25,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kr.co.donghyun.player.R
 import kr.co.donghyun.player.data.album.model.Music
-import kr.co.donghyun.player.data.album.model.VideoItem
 import kr.co.donghyun.player.presentation.base.BaseComponentActivity
 import kr.co.donghyun.player.presentation.screen.PlayerScreen
 import kr.co.donghyun.player.presentation.service.MusicPlayerService
@@ -35,6 +34,7 @@ import kr.co.donghyun.player.presentation.util.Util
 import kr.co.donghyun.player.presentation.viewmodel.PlayerViewModel
 import java.io.File
 import androidx.core.content.edit
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.presentation.util.generateYoutubeUrl
 
 @AndroidEntryPoint
@@ -65,7 +65,8 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
             val musicDuration = remember { playbackManager.musicDuration }
             val isOnPlaylist = remember { playbackManager.isOnPlaylist }
 
-            LaunchedEffect(rememberGetMusicDetail) {
+            LaunchedEffect(Unit) {
+                Log.d("TAG", "isNewPlaying : ${intent.getBooleanExtra("isNewPlaying", false)}, videoId : ${intent.getStringExtra("videoId")}")
                 if(intent.getBooleanExtra("isNewPlaying", false)) {
                     extractMusicAndPlaying(videoId = intent.getStringExtra("videoId") ?: "", generateYoutubeUrl(intent.getStringExtra("videoId") ?: ""))
                     exoPlayer.run {
@@ -74,7 +75,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
                         val intent = Intent(this@PlayerActivity, MusicPlayerService::class.java).apply {
                             action = "ACTION_PLAY"
                             putExtra("videoId", intent.getStringExtra("videoId"))
-                            putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as VideoItem?)?.thumbnail?.url)
+                            putExtra("imageUrl", if(playbackManager.playingStateOfResponse.value is Music?) (playbackManager.playingStateOfResponse.value as Music?)?.thumbnailUrl else if(playbackManager.playingStateOfResponse.value is SearchItem?) (playbackManager.playingStateOfResponse.value as SearchItem?)?.thumbnailUrl else (playbackManager.playingStateOfResponse.value as SearchItem?)?.thumbnailUrl)
                         }
 
                         ContextCompat.startForegroundService(this@PlayerActivity, intent)
@@ -136,7 +137,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
 
                         val videoId = when (val item = playbackManager.getFetchedPlaylist()[nextIndex]) {
                             is Music -> item.youtubeId
-                            is VideoItem -> item.id
+                            is SearchItem -> item.id
                             else -> ""
                         }
 
@@ -153,7 +154,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
 
                         val videoId = when (val item = playbackManager.getFetchedMusicVideoList()[nextIndex]) {
                             is Music -> item.youtubeId
-                            is VideoItem -> item.id
+                            is SearchItem -> item.id
                             else -> ""
                         }
 
@@ -173,7 +174,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
 
                         val videoId = when (val item = playbackManager.getFetchedPlaylist()[previousIndex]) {
                             is Music -> item.youtubeId
-                            is VideoItem -> item.id
+                            is SearchItem -> item.id
                             else -> ""
                         }
 
@@ -190,7 +191,7 @@ class PlayerActivity : BaseComponentActivity<PlayerViewModel>() {
 
                         val videoId = when (val item = playbackManager.getFetchedMusicVideoList()[previousIndex]) {
                             is Music -> item.youtubeId
-                            is VideoItem -> item.id
+                            is SearchItem -> item.id
                             else -> ""
                         }
 

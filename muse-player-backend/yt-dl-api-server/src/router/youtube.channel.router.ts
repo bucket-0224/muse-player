@@ -11,6 +11,14 @@ router.get('/channel-info', async (req, res, next) => {
     }
 });
 
+router.get('/search', async (req, res, next) => {
+    try {
+        await youtubeChannelController.fetchYoutubeVideosByQuery(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.post('/search-channel', async (req, res, next) => {
     try {
         await youtubeChannelController.getYoutubeChannelBySearchQuery(req, res, next);

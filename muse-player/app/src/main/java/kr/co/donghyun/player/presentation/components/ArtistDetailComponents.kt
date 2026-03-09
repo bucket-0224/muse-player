@@ -28,14 +28,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
-import kr.co.donghyun.player.data.channel.model.SearchChannelResponse
+import kr.co.donghyun.player.data.channel.model.SearchItem
 import kr.co.donghyun.player.data.common.model.Song
 
 
 @Composable
-fun ArtistDetailComponents(artist: ArtistPreview?, onClick: (String) -> Unit) {
-    Column(modifier = Modifier.clickable { onClick(artist?.artistId ?: "") }) {
+fun ArtistDetailComponents(artist: SearchItem?, onClick: (String) -> Unit) {
+    Column(modifier = Modifier.clickable { onClick(artist?.id ?: "") }) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start) {
             Card(
                 shape = RoundedCornerShape(99.dp),
@@ -51,7 +50,7 @@ fun ArtistDetailComponents(artist: ArtistPreview?, onClick: (String) -> Unit) {
             Column(modifier = Modifier
                 .weight(1f)
                 .padding(start = 16.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
-                Text(text = artist?.name ?: "", fontSize = 18.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
+                Text(text = artist?.title ?: "", fontSize = 18.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
                 Text(text = "${artist?.subscribers}", fontSize = 14.sp)
             }
         }

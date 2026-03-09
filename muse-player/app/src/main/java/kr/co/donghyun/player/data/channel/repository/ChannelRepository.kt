@@ -1,15 +1,14 @@
 package kr.co.donghyun.player.data.channel.repository
 
-import kr.co.donghyun.player.data.channel.model.ArtistPreview
+import androidx.room.Query
 import kr.co.donghyun.player.data.channel.model.ChannelDataResponse
-import kr.co.donghyun.player.data.channel.model.SearchChannelResponse
-import kr.co.donghyun.player.data.album.model.SearchVideoResponse
+import kr.co.donghyun.player.data.channel.model.SearchItem
+import kr.co.donghyun.player.data.channel.model.SearchResponse
 import retrofit2.Response
 
 interface ChannelRepository {
-    suspend fun searchVideos(query: String) : Response<SearchVideoResponse>
     suspend fun getChannelInfo(channelId : String) : Response<ChannelDataResponse>
-    suspend fun searchChannel(query : String) : Response<SearchChannelResponse>
-    suspend fun insertRecentSearchedChannel(artistPreview: ArtistPreview)
-    suspend fun fetchAllRecentSearchedChannels() : List<ArtistPreview>
+    suspend fun searchVideosByQuery(query: String) : Response<SearchResponse>
+    suspend fun insertRecentSearchedChannel(artistPreview: SearchItem)
+    suspend fun fetchAllRecentSearchedChannels() : List<SearchItem>
 }

@@ -24,10 +24,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import kr.co.donghyun.player.data.album.model.VideoItem
+import kr.co.donghyun.player.data.channel.model.SearchItem
 
 @Composable
-fun VideoDetailComponents(video: VideoItem?, onClick: (String) -> Unit) {
+fun VideoDetailComponents(video: SearchItem?, onClick: (String) -> Unit) {
     Column(modifier = Modifier.clickable { onClick(video?.id ?: "") }) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Start) {
             Card(
@@ -39,13 +39,13 @@ fun VideoDetailComponents(video: VideoItem?, onClick: (String) -> Unit) {
                     defaultElevation = 8.dp
                 )
             ) {
-                AsyncImage(model = video?.thumbnail?.url ?: "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
+                AsyncImage(model = video?.thumbnailUrl ?: "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, contentDescription = "imageThumbnail")
             }
             Column(modifier = Modifier
                 .weight(1f)
                 .padding(start = 16.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                 Text(text = video?.title ?: "", fontSize = 18.sp, overflow = TextOverflow.Ellipsis, maxLines = 1)
-                Text(text = video?.channel?.name ?: "", fontSize = 14.sp)
+                Text(text = video?.artist ?: "", fontSize = 14.sp)
             }
         }
         Box(modifier = Modifier
